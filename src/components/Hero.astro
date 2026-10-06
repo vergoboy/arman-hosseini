@@ -1,0 +1,62 @@
+---
+import { Mail, ArrowDown } from '@lucide/astro/icons';
+import BrandIcon from './BrandIcon.astro';
+import { socials } from '../data/socials';
+---
+
+<section class="relative min-h-screen flex flex-col justify-center px-6 md:px-12 lg:px-24">
+  <div class="max-w-4xl mx-auto w-full">
+    <p class="font-mono text-sm text-orange-600 mb-4">
+      <span class="text-zinc-400">$</span> whoami
+    </p>
+
+    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight text-zinc-100">
+      Arman Hosseini<span class="cursor-blink text-orange-600">|</span>
+    </h1>
+
+    <p class="mt-4 text-lg md:text-xl text-zinc-400 max-w-2xl leading-relaxed">
+      Software Engineer specializing in
+      <span class="text-zinc-100 font-medium">Rust</span>,
+      <span class="text-zinc-100 font-medium">Linux systems</span>, and
+      <span class="text-zinc-100 font-medium">network engineering</span>.
+    </p>
+
+    <p class="mt-3 text-base text-zinc-400 max-w-2xl leading-relaxed">
+      Building high-performance native systems, optimizing network traffic, and
+      reverse-engineering hardware. Focused on technical depth, open-source, and
+      performance optimization.
+    </p>
+
+    <div class="mt-8 flex flex-wrap items-center gap-4">
+      <a
+        href="#projects"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-orange-600 text-white font-medium text-sm transition-all duration-300 hover:bg-orange-500"
+      >
+        View Projects
+        <ArrowDown class="w-4 h-4" />
+      </a>
+      <a
+        href="mailto:hi@arman-hosseini.ir"
+        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-zinc-700 text-zinc-100 font-medium text-sm transition-all duration-300 hover:border-orange-600 hover:text-orange-600"
+      >
+        <Mail class="w-4 h-4" />
+        Get in Touch
+      </a>
+    </div>
+
+    <div class="mt-8 flex items-center gap-3">
+      {socials.slice(0, 5).map((s) => (
+        <a
+          href={s.href}
+          target={s.href.startsWith('#') ? undefined : '_blank'}
+          rel={s.href.startsWith('#') ? undefined : 'noopener noreferrer'}
+          class="text-zinc-400 transition-colors duration-300 hover:text-orange-600"
+          aria-label={s.label}
+        >
+          <BrandIcon name={s.icon} class="w-5 h-5" />
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+

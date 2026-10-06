@@ -1,0 +1,53 @@
+---
+import { ArrowUpRight } from '@lucide/astro/icons';
+import { projects } from '../data/projects';
+
+const spanClasses: Record<string, string> = {
+  both: 'md:col-span-2 md:row-span-2',
+  col: 'md:col-span-2',
+  row: 'md:row-span-2',
+  none: '',
+};
+---
+
+<section id="projects" class="px-6 md:px-12 lg:px-24 py-20 md:py-32">
+  <div class="max-w-6xl mx-auto">
+    <div class="mb-12">
+      <p class="font-mono text-sm text-orange-600 mb-2">
+        <span class="text-zinc-400">$</span> ls ./featured-projects/
+      </p>
+      <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-zinc-100">Featured Projects</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-fr">
+      {projects.map((project) => (
+        <article
+          class={`group relative flex flex-col p-6 rounded-xl border border-zinc-800 bg-zinc-900 transition-all duration-300 hover:border-orange-600 hover:bg-zinc-800/50 ${spanClasses[project.span || 'none']}`}
+        >
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <h3 class="text-lg font-semibold text-zinc-100 group-hover:text-orange-600 transition-colors duration-300">
+                {project.name}
+              </h3>
+              <p class="text-sm text-zinc-400 mt-0.5">{project.tagline}</p>
+            </div>
+            <ArrowUpRight class="w-5 h-5 text-zinc-400 shrink-0 group-hover:text-orange-600 transition-colors duration-300" />
+          </div>
+
+          <p class="text-sm text-zinc-400 leading-relaxed flex-grow">
+            {project.description}
+          </p>
+
+          <div class="mt-4 flex flex-wrap gap-2">
+            {project.tags.map((tag) => (
+              <span class="font-mono text-xs px-2 py-1 rounded border border-zinc-800 bg-zinc-800/80 text-zinc-400">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
