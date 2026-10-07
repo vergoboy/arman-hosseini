@@ -1,25 +1,67 @@
-@import "tailwindcss";
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource-variable/vazirmatn';
+@import 'tailwindcss';
 
-@theme {
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+/*
+ * Dark mode is class-based, driven by a `.dark` class on <html>.
+ * <html> ships with `class="dark"` (Modern CLI Dark is the default) and an
+ * inline script in Layout.astro removes it when the saved theme is light.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Raw design tokens. Light is the base, `.dark` overrides the surfaces.
+ * Accent is the same rust-orange in both themes.
+ */
+:root {
+  color-scheme: light;
+
+  --page: #ffffff; /* white — page background */
+  --surface: #f4f4f5; /* zinc-100 — cards / sections */
+  --line: #e4e4e7; /* zinc-200 — borders */
+  --primary: #18181b; /* zinc-900 — primary text */
+  --muted: #52525b; /* zinc-600 — muted text */
+  --accent: #ea580c; /* orange-600 — rust-orange accent */
+
+  --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-code: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, monospace;
 }
 
-html {
-  scroll-behavior: smooth;
-  background-color: #09090b;
+.dark {
+  color-scheme: dark;
+
+  --page: #09090b; /* zinc-950 */
+  --surface: #18181b; /* zinc-900 */
+  --line: #27272a; /* zinc-800 */
+  --primary: #e4e4e7; /* zinc-200 */
+  --muted: #a1a1aa; /* zinc-400 */
+  --accent: #ea580c; /* orange-600 */
 }
 
-body {
-  margin: 0;
-  background-color: #09090b;
-  color: #e4e4e7;
-  font-family: "Inter", system-ui, sans-serif;
+/* Persian typography: Vazirmatn for body and for tags / code-sized text. */
+html[lang='fa'] {
+  --font-body: 'Vazirmatn Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-code: 'Vazirmatn Variable', 'JetBrains Mono Variable', ui-monospace, monospace;
+  line-height: 1.85;
 }
 
-::selection {
-  background-color: rgba(234, 88, 12, 0.3);
-  color: #fafafa;
+/*
+ * `inline` keeps the token value (e.g. `var(--page)`) inside the generated
+ * utilities, so bg-page / text-muted / border-line react to the active theme.
+ */
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-primary: var(--primary);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-code);
+
+  --animate-blink: blink 1.1s step-end infinite;
 }
 
 @keyframes blink {
@@ -33,6 +75,112 @@ body {
   }
 }
 
-.cursor-blink {
-  animation: blink 1s step-end infinite;
+@layer base {
+  html {
+    @apply bg-page text-primary antialiased;
+    font-family: var(--font-body);
+  }
+
+  body {
+    @apply min-h-screen;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 35%, transparent);
+  }
+
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-accent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-blink {
+      animation: none;
+    }
+  }
+}
+
+/*
+ * Body of a synced vault note, rendered as MDX/Markdown inside the project and journal
+ * detail views. Uses the same tokens as the rest of the site so a note inherits the CLI
+ * theme instead of arriving as unstyled browser defaults.
+ */
+@layer components {
+  .mdx-body {
+    @apply leading-relaxed text-muted;
+  }
+
+  .mdx-body > * + * {
+    @apply mt-4;
+  }
+
+  .mdx-body h2 {
+    @apply mt-10 text-xl font-semibold text-primary;
+  }
+
+  .mdx-body h3 {
+    @apply mt-8 text-lg font-semibold text-primary;
+  }
+
+  .mdx-body h4 {
+    @apply mt-6 font-semibold text-primary;
+  }
+
+  .mdx-body a {
+    @apply text-accent underline underline-offset-4;
+  }
+
+  .mdx-body strong {
+    @apply font-semibold text-primary;
+  }
+
+  .mdx-body ul {
+    @apply list-disc space-y-1 ps-6;
+  }
+
+  .mdx-body ol {
+    @apply list-decimal space-y-1 ps-6;
+  }
+
+  .mdx-body li > ul,
+  .mdx-body li > ol {
+    @apply mt-1;
+  }
+
+  .mdx-body code {
+    @apply rounded border border-line bg-surface px-1.5 py-0.5 font-mono text-[0.85em] text-primary;
+  }
+
+  .mdx-body pre {
+    @apply overflow-x-auto rounded-xl border border-line bg-surface p-4 font-mono text-sm;
+  }
+
+  .mdx-body pre code {
+    @apply border-0 bg-transparent p-0 text-[1em];
+  }
+
+  .mdx-body blockquote {
+    @apply border-s-2 border-accent ps-4 italic;
+  }
+
+  .mdx-body hr {
+    @apply border-line;
+  }
+
+  .mdx-body img {
+    @apply rounded-xl border border-line;
+  }
+
+  .mdx-body table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .mdx-body th,
+  .mdx-body td {
+    @apply border border-line px-3 py-2 text-start;
+  }
+
+  .mdx-body th {
+    @apply bg-surface font-semibold text-primary;
+  }
 }

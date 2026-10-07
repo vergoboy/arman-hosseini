@@ -1,0 +1,28 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import JournalView from '../../../components/views/JournalView.astro';
+import { site } from '../../../data/site';
+import { localizedPath, useTranslations, type Lang } from '../../../i18n/translations';
+
+const lang: Lang = 'en';
+const d = useTranslations(lang);
+
+const jsonLd = [
+  {
+    '@type': 'CollectionPage',
+    url: `${site.url}${localizedPath(lang, 'journal')}`,
+    name: d.meta.journal.title,
+    description: d.meta.journal.description,
+    inLanguage: lang,
+  },
+];
+---
+
+<Layout
+  lang={lang}
+  title={d.meta.journal.title}
+  description={d.meta.journal.description}
+  jsonLd={jsonLd}
+>
+  <JournalView lang={lang} />
+</Layout>

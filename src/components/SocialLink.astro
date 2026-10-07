@@ -1,0 +1,37 @@
+---
+import BrandIcon from './BrandIcon.astro';
+import type { ContactMethod } from '../i18n/translations';
+
+interface Props {
+  method: ContactMethod;
+}
+
+const { method } = Astro.props;
+const isExternal = method.href ? !method.href.startsWith('mailto:') : false;
+const base = 'inline-flex items-center gap-3 text-muted';
+---
+
+{
+  method.href ? (
+    <a
+      href={method.href}
+      rel="me noopener"
+      target={isExternal ? '_blank' : undefined}
+      class:list={[base, 'transition-colors duration-300 hover:text-accent']}
+    >
+      <BrandIcon name={method.icon} class="h-5 w-5 shrink-0" />
+      <span class="text-sm">{method.label}</span>
+      <span dir="ltr" class="font-mono text-xs text-muted/60">
+        {method.handle}
+      </span>
+    </a>
+  ) : (
+    <span class={base}>
+      <BrandIcon name={method.icon} class="h-5 w-5 shrink-0" />
+      <span class="text-sm">{method.label}</span>
+      <span dir="ltr" class="font-mono text-xs text-muted/60">
+        {method.handle}
+      </span>
+    </span>
+  )
+}

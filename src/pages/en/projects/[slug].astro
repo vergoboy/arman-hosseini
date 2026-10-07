@@ -1,0 +1,62 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import ProjectDetailView from '../../../components/views/ProjectDetailView.astro';
+import {
+  getProjectsResolved,
+  getProjectWithContent,
+  type ResolvedProject,
+} from '../../../data/projects';
+import { site } from '../../../data/site';
+import { localizedPath, type Lang } from '../../../i18n/translations';
+
+const lang: Lang = 'en';
+
+// NOTE: `getStaticPaths` is hoisted out of the component scope at build time,
+// so it cannot reference `lang` from the frontmatter above.
+export async function getStaticPaths() {
+  const projects = await getProjectsResolved('en');
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
+}
+
+interface Props {
+  project: ResolvedProject;
+}
+
+const { project } = Astro.props;
+
+// The rendered vault note, present only for collection-backed projects. The built-in
+// fallback copy has no note, and renders its own paragraph list instead.
+const content = await getProjectWithContent(lang, project.slug);
+const Content = content?.Content;
+
+// Vault frontmatter is not required to carry a summary, so never emit an empty meta description.
+const description = project.summary || project.tagline || project.name;
+
+const jsonLd = [
+  {
+    '@type': 'SoftwareApplication',
+    name: project.name,
+    description,
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Linux, Android',
+    inLanguage: lang,
+    author: { '@type': 'Person', name: site.name, url: site.url },
+    keywords: project.tags.join(', '),
+    url: `${site.url}${localizedPath(lang, `projects/${project.slug}`)}`,
+  },
+];
+---
+
+<Layout
+  lang={lang}
+  title={`${project.name} | ${site.name}`}
+  description={description}
+  jsonLd={jsonLd}
+>
+  <ProjectDetailView lang={lang} project={project}>
+    {Content ? <Content /> : project.body.map((paragraph) => <p>{paragraph}</p>)}
+  </ProjectDetailView>
+</Layout>

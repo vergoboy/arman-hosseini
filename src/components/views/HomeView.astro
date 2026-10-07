@@ -1,0 +1,16 @@
+---
+import Hero from '../Hero.astro';
+import BentoGrid from '../BentoGrid.astro';
+import type { Lang } from '../../i18n/translations';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+---
+
+<main id="main" class="mx-auto w-full max-w-5xl flex-1 px-6">
+  <Hero lang={lang} />
+  <BentoGrid lang={lang} />
+</main>

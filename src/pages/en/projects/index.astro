@@ -1,0 +1,39 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import ProjectsView from '../../../components/views/ProjectsView.astro';
+import { getProjectsResolved } from '../../../data/projects';
+import { site } from '../../../data/site';
+import { localizedPath, useTranslations, type Lang } from '../../../i18n/translations';
+
+const lang: Lang = 'en';
+const d = useTranslations(lang);
+const projects = await getProjectsResolved(lang);
+
+const jsonLd = [
+  {
+    '@type': 'CollectionPage',
+    url: `${site.url}${localizedPath(lang, 'projects')}`,
+    name: d.meta.projects.title,
+    description: d.meta.projects.description,
+    inLanguage: lang,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: projects.map((project, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: project.name,
+        url: `${site.url}${localizedPath(lang, `projects/${project.slug}`)}`,
+      })),
+    },
+  },
+];
+---
+
+<Layout
+  lang={lang}
+  title={d.meta.projects.title}
+  description={d.meta.projects.description}
+  jsonLd={jsonLd}
+>
+  <ProjectsView lang={lang} />
+</Layout>

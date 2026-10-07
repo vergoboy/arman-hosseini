@@ -1,47 +1,47 @@
 ---
-import BrandIcon from './BrandIcon.astro';
-import { socials } from '../data/socials';
+import Logo from './Logo.astro';
+import SocialLink from './SocialLink.astro';
+import { site } from '../data/site';
+import { useTranslations, type Lang } from '../i18n/translations';
 
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const d = useTranslations(lang);
 const year = new Date().getFullYear();
 ---
 
-<footer class="border-t border-zinc-800 px-6 md:px-12 lg:px-24 py-12">
-  <div class="max-w-6xl mx-auto">
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-      <div>
-        <p class="font-mono text-sm text-zinc-400">
-          <span class="text-orange-600">$</span> echo $USER
-        </p>
-        <p class="mt-1 text-zinc-100 font-medium">Arman Hosseini</p>
-        <p class="text-sm text-zinc-400 mt-1">
-          Software Engineer — Rust, Linux & Networks
-        </p>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-4">
-        {socials.map((s) => (
-          <a
-            href={s.href}
-            target={s.href.startsWith('#') ? undefined : '_blank'}
-            rel={s.href.startsWith('#') ? undefined : 'noopener noreferrer'}
-            class="inline-flex items-center gap-2 text-sm text-zinc-400 transition-colors duration-300 hover:text-orange-600"
-            aria-label={s.label}
-          >
-            <BrandIcon name={s.icon} class="w-4 h-4" />
-            <span class="hidden sm:inline">{s.label}</span>
-          </a>
-        ))}
-      </div>
+<footer class="mt-auto border-t border-line">
+  <div class="mx-auto max-w-5xl px-6 py-12">
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-4">
+      <Logo lang={lang} />
+      <h2 class="font-mono text-xs text-muted">
+        <span dir="ltr"><span class="text-accent">$</span> {d.footer.command}</span>
+      </h2>
     </div>
 
-    <div class="mt-8 pt-8 border-t border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <p class="font-mono text-xs text-zinc-400">
-        © {year} Arman Hosseini. All rights reserved.
+    <ul class="mt-6 grid gap-3 sm:grid-cols-2">
+      {
+        d.contact.methods.map((method) => (
+          <li>
+            <SocialLink method={method} />
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="mt-10 flex flex-wrap items-center justify-between gap-4">
+      <p class="font-mono text-xs text-muted">
+        {`© ${year} ${site.name}`} · {d.footer.builtWith}
       </p>
-      <p class="font-mono text-xs text-zinc-400">
-        Built with Astro & Tailwind CSS
-      </p>
+      <a
+        href="#top"
+        class="font-mono text-xs text-muted transition-colors duration-300 hover:text-accent"
+      >
+        {d.footer.backToTop}
+      </a>
     </div>
   </div>
 </footer>
-

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://arman-hosseini.ir/sitemap-index.xml

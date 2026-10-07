@@ -1,0 +1,29 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import AboutView from '../../components/views/AboutView.astro';
+import { site } from '../../data/site';
+import { localizedPath, useTranslations, type Lang } from '../../i18n/translations';
+
+const lang: Lang = 'en';
+const d = useTranslations(lang);
+
+const jsonLd = [
+  {
+    '@type': 'AboutPage',
+    url: `${site.url}${localizedPath(lang, 'about')}`,
+    name: d.meta.about.title,
+    description: d.meta.about.description,
+    inLanguage: lang,
+    mainEntity: { '@id': `${site.url}/#person` },
+  },
+];
+---
+
+<Layout
+  lang={lang}
+  title={d.meta.about.title}
+  description={d.meta.about.description}
+  jsonLd={jsonLd}
+>
+  <AboutView lang={lang} />
+</Layout>

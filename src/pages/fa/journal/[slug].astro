@@ -1,0 +1,56 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import JournalDetailView from '../../../components/views/JournalDetailView.astro';
+import { getJournal, getJournalEntryWithContent, type JournalEntry } from '../../../data/journal';
+import { site } from '../../../data/site';
+import { localizedPath, type Lang } from '../../../i18n/translations';
+
+const lang: Lang = 'fa';
+
+// NOTE: `getStaticPaths` is hoisted out of the component scope at build time,
+// so it cannot reference `lang` from the frontmatter above.
+export async function getStaticPaths() {
+  const entries = await getJournal('fa');
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+interface Props {
+  entry: JournalEntry;
+}
+
+const { entry } = Astro.props;
+
+const withContent = await getJournalEntryWithContent(lang, entry.slug);
+const Content = withContent?.Content;
+
+// Vault frontmatter is not required to carry a summary, so never emit an empty meta description.
+const description = entry.summary || entry.title;
+
+const jsonLd = [
+  {
+    '@type': 'BlogPosting',
+    headline: entry.title,
+    description,
+    datePublished: entry.date.toISOString(),
+    dateModified: entry.date.toISOString(),
+    inLanguage: lang,
+    keywords: entry.tags.join(', '),
+    author: { '@type': 'Person', name: site.name, url: site.url },
+    url: `${site.url}${localizedPath(lang, `journal/${entry.slug}`)}`,
+  },
+];
+---
+
+<Layout
+  lang={lang}
+  title={`${entry.title} | ${site.alternateName}`}
+  description={description}
+  jsonLd={jsonLd}
+>
+  <JournalDetailView lang={lang} entry={entry}>
+    {Content && <Content />}
+  </JournalDetailView>
+</Layout>
