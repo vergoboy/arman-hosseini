@@ -1,0 +1,23 @@
+# /etc/systemd/system/arman-admin.service
+[Unit]
+Description=arman-hosseini.ir admin & build service
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/opt/arman-hosseini-src
+Environment=NODE_ENV=production
+Environment=SITE_DIR=/opt/arman-hosseini-src
+Environment=RELEASES_DIR=/opt/arman-hosseini/releases
+Environment=CURRENT_LINK=/opt/arman-hosseini/current
+Environment=DATA_DIR=/var/lib/arman-admin
+# Optional: ADMIN_PASSWORD_HASH=... (node admin/server.mjs --hash). Otherwise a one-time password is printed in `journalctl -u arman-admin` on first start.
+EnvironmentFile=-/etc/arman-admin.env
+ExecStart=/usr/bin/node admin/server.mjs
+Restart=on-failure
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/opt/arman-hosseini-src /opt/arman-hosseini /var/lib/arman-admin
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,20 @@
+---
+import { ArrowUpRight } from '@lucide/astro';
+import type { Entry } from '../lib/content';
+import { fmtDate, isoDate, type Lang } from '../lib/i18n';
+interface Props { entry: Entry; class?: string; showDate?: boolean }
+const { entry: e, class: c = '', showDate = e.collection === 'journal' } = Astro.props;
+const lang = e.lang as Lang;
+---
+<a href={e.url} class:list={['card group flex h-full flex-col gap-3', c]}>
+  <div class="flex items-start justify-between gap-3">
+    <h3 class="text-lg font-semibold leading-snug">{e.title}</h3>
+    <ArrowUpRight class="mt-1 h-5 w-5 shrink-0 text-muted transition group-hover:text-accent rtl:-scale-x-100" aria-hidden="true" />
+  </div>
+  {e.tagline && <p class="font-mono text-xs text-accent">{e.tagline}</p>}
+  <p class="text-sm leading-7 text-muted">{e.summary}</p>
+  <div class="mt-auto flex flex-wrap items-center gap-2 pt-1">
+    {showDate && <time class="font-mono text-xs text-muted" datetime={isoDate(e.date)}>{fmtDate(e.date, lang)}</time>}
+    {e.tags.slice(0, 4).map((t) => <span class="chip" dir="auto">{t}</span>)}
+  </div>
+</a>

@@ -1,0 +1,24 @@
+---
+import { ChevronDown } from '@lucide/astro';
+import type { Faq } from '../lib/content';
+import { U } from '../lib/ui';
+import type { Lang } from '../lib/i18n';
+interface Props { faq: Faq[]; lang: Lang; title?: string }
+const { faq, lang, title = U(lang).faqTitle } = Astro.props;
+---
+{faq.length > 0 && (
+  <section aria-labelledby="faq" class="mt-14">
+    <h2 id="faq" class="text-2xl font-semibold tracking-tight">{title}</h2>
+    <div class="mt-5 space-y-3">
+      {faq.map((f) => (
+        <details class="card group !p-0 open:border-accent/60">
+          <summary class="flex cursor-pointer list-none items-center justify-between gap-4 p-4 font-medium">
+            <span>{f.q}</span>
+            <ChevronDown class="h-4 w-4 shrink-0 text-muted transition group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          <p class="px-4 pb-4 leading-7 text-muted">{f.a}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+)}

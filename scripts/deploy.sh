@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Build the site and publish `dist/` to the server over SSH with rsync.
+# Build the site and publish `dist/` to the server as a new release over SSH with rsync.
 #
-#   npm run deploy              # build + sync
+#   npm run deploy              # build + sync + flip `current`
 #   npm run deploy:dry          # build + show what would change (no writes)
 #   scripts/deploy.sh --help
 #
@@ -14,8 +14,9 @@
 # Secrets live in .env (git-ignored) — see .env.example. This script refuses to run if
 # deploy.config.json contains anything that looks like a credential.
 #
-# Layout mirrors the pipeline the FIT plugin triggers:
-#   npm run sync:content  →  npm run build  →  rsync dist/ → server
+# Layout matches deploy/install.sh and the arman-admin service:
+#   npm run build → rsync dist/ → $remotePath/releases/<timestamp>/ → flip $remotePath/current
+#   (the newest 5 releases are kept, so a rollback is just pointing `current` back).
 #
 set -euo pipefail
 
@@ -34,7 +35,9 @@ die() { printf '[%s] error: %s\n' "$(date '+%H:%M:%S')" "$*" >&2; exit 1; }
 
 usage() {
   cat <<'EOF'
-Build the site and publish dist/ to the server over SSH with rsync.
+Build the site and publish dist/ as a new release on the server (rsync over SSH).
+Every run writes $remotePath/releases/<timestamp>/ and flips the `current`
+symlink to it, so nginx (root: $remotePath/current) switches atomically.
 
 Usage:
   scripts/deploy.sh [options]
@@ -146,6 +149,7 @@ IDENTITY_FILE="$(cfg identityFile)"
 LOCAL_DIR="$(cfg localDir dist)"
 BUILD_COMMAND="$(cfg buildCommand 'npm run build')"
 DELETE_FLAG="$(cfg delete true)"
+RELEASE_ID="${DEPLOY_RELEASE_ID:-$(date +%Y%m%d%H%M%S)}"
 
 [ -n "$REMOTE_PATH" ] || die "$CONFIG_FILE: \"remotePath\" is required"
 [ -n "$LOCAL_DIR" ] || die "$CONFIG_FILE: \"localDir\" is required"
@@ -194,11 +198,11 @@ done < <(cfg_list exclude)
 SSH_BASE=()
 
 if [ "$LOCAL_MODE" -eq 1 ]; then
-  DESTINATION="$REMOTE_PATH"
+  DESTINATION="$REMOTE_PATH/releases/$RELEASE_ID/"
   [ -n "$HOST" ] && warn "--local overrides the configured host \"$HOST\"; nothing leaves this machine"
-  log "Local mode: $LOCAL_DIR/ → $REMOTE_PATH/"
+  log "Local mode: $LOCAL_DIR/ → $DESTINATION"
   command -v mkdir >/dev/null 2>&1 || die "mkdir is required"
-  mkdir -p "$REMOTE_PATH"
+  mkdir -p "$REMOTE_PATH/releases/$RELEASE_ID"
 else
   [ -n "$PORT" ] || PORT=22
 
@@ -226,13 +230,13 @@ else
 
   RSYNC_ARGS+=(-e "ssh ${SSH_OPTS[*]}")
 
-  DESTINATION="$USER_NAME@$HOST:$REMOTE_PATH/"
+  DESTINATION="$USER_NAME@$HOST:$REMOTE_PATH/releases/$RELEASE_ID/"
   log "Remote mode: $LOCAL_DIR/ → $DESTINATION"
 
   if [ "$DRY_RUN" -eq 0 ]; then
-    log "Ensuring $REMOTE_PATH exists on $HOST"
-    "${SSH_BASE[@]}" ssh "${SSH_OPTS[@]}" "$USER_NAME@$HOST" "mkdir -p '$REMOTE_PATH'" \
-      || die "could not create $REMOTE_PATH on $HOST (check host, user, port and key/password)"
+    log "Ensuring $REMOTE_PATH/releases/$RELEASE_ID exists on $HOST"
+    "${SSH_BASE[@]}" ssh "${SSH_OPTS[@]}" "$USER_NAME@$HOST" "mkdir -p '$REMOTE_PATH/releases/$RELEASE_ID'" \
+      || die "could not create $REMOTE_PATH/releases/$RELEASE_ID on $HOST (check host, user, port and key/password)"
   fi
 fi
 
@@ -265,6 +269,13 @@ ELAPSED=$((SECONDS - START_SECONDS))
 if [ "$DRY_RUN" -eq 1 ]; then
   log "Dry run complete in ${ELAPSED}s — nothing was uploaded"
 else
-  log "Deployed to $DESTINATION in ${ELAPSED}s"
-  [ "$DELETE_FLAG" = "true" ] || warn "\"delete\" is false — files removed locally still exist on the server"
+  # Point `current` at the release we just uploaded, then keep only the newest 5 releases.
+  if [ "$LOCAL_MODE" -eq 1 ]; then
+    ln -sfn "$REMOTE_PATH/releases/$RELEASE_ID" "$REMOTE_PATH/current"
+  else
+    "${SSH_BASE[@]}" ssh "${SSH_OPTS[@]}" "$USER_NAME@$HOST" \
+      "ln -sfn '$REMOTE_PATH/releases/$RELEASE_ID' '$REMOTE_PATH/current' && cd '$REMOTE_PATH/releases' && ls -1 | sort -r | tail -n +6 | xargs -r rm -rf" \
+      || die "release $RELEASE_ID was uploaded but flipping $REMOTE_PATH/current failed"
+  fi
+  log "Deployed release $RELEASE_ID → current in ${ELAPSED}s"
 fi

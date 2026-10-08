@@ -1,0 +1,82 @@
+---
+import { Terminal, ArrowRight } from '@lucide/astro';
+import Base from '../../layouts/Base.astro';
+import Mark from '../../components/Mark.astro';
+import EntryCard from '../../components/EntryCard.astro';
+import SectionHead from '../../components/SectionHead.astro';
+import Quick from '../../components/Quick.astro';
+import Faq from '../../components/Faq.astro';
+import BrandIcon from '../../components/BrandIcon.astro';
+import { getEntries } from '../../lib/content';
+import { faqNode, staticSeo } from '../../lib/seo';
+import { languages, lp, type Lang } from '../../lib/i18n';
+import { useTranslations } from '../../i18n/translations';
+import { U } from '../../lib/ui';
+import { site } from '../../data/site';
+
+export function getStaticPaths() { return languages.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const d = useTranslations(lang);
+const u = U(lang);
+const featured = (await getEntries('projects', lang)).filter((p) => p.featured).slice(0, 3);
+const latest = (await getEntries('journal', lang)).slice(0, 3);
+const s = staticSeo(lang, '', d.meta.home);
+const gh = d.contact.methods.find((m) => m.id === 'github')!;
+const spanCls: Record<string, string> = { col: '', row: 'sm:col-span-2', both: 'sm:col-span-2', full: 'sm:col-span-2', none: '' };
+---
+<Base navKey="" seo={{ lang, path: lp(lang), ...s, type: 'profile',
+  alternates: { en: lp('en'), fa: lp('fa') },
+  graph: [{ '@type': 'ProfilePage', '@id': `${site.url}${lp(lang)}#page`, url: `${site.url}${lp(lang)}`, name: s.title, inLanguage: lang, mainEntity: { '@id': `${site.url}/#person` }, isPartOf: { '@id': `${site.url}/#website` } }, faqNode(u.faqHome, lang)] }}>
+  <main id="main" class="flex-1">
+    <section class="wrap grid items-center gap-10 py-14 sm:py-20 md:grid-cols-[1.4fr_1fr]">
+      <div>
+        <p class="chip !border-accent/50 !text-accent"><span class="me-2 inline-block h-1.5 w-1.5 rounded-full bg-accent"></span>{d.site.available}</p>
+        <p class="mono mt-6 text-sm text-muted" dir="ltr"><span class="text-accent">$</span> {d.hero.prompt}<span class="animate-blink ms-0.5 inline-block h-4 w-2 translate-y-0.5 bg-accent"></span></p>
+        <h1 class="mt-3 text-4xl font-bold leading-tight tracking-tight sm:text-6xl">{lang === 'fa' ? site.alternateName : site.name}</h1>
+        <p class="mt-2 text-xl font-medium text-accent sm:text-2xl">{d.hero.role}</p>
+        <p class="mt-5 max-w-xl text-lg leading-8 text-muted">{d.hero.bio}</p>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <a class="btn btn-primary" href={lp(lang, 'projects')}><Terminal class="h-4 w-4" aria-hidden="true" />{d.hero.ctaProjects}</a>
+          <a class="btn" href={gh.href} rel="me noopener"><BrandIcon name="github" class="h-4 w-4" />{d.hero.ctaGitHub}</a>
+        </div>
+        <ul class="mt-8 flex flex-wrap gap-2" aria-label={d.hero.stackLabel}>{d.hero.stack.map((x) => <li class="chip">{x}</li>)}</ul>
+      </div>
+      <div class="relative mx-auto w-56 sm:w-72" aria-hidden="true">
+        <div class="absolute inset-0 -z-10 rounded-full bg-accent/20 blur-3xl"></div>
+        <Mark size={288} class="float h-auto w-full drop-shadow-2xl [animation:float_6s_ease-in-out_infinite]" alt="" />
+      </div>
+    </section>
+
+    <section class="wrap" aria-label={u.whoLabel}>
+      <Quick lang={lang} label={u.whoLabel} text={u.who} />
+      <dl class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {u.facts.map(([k, v]) => <div class="card !p-4"><dt class="eyebrow">{k}</dt><dd class="mt-1 text-sm">{v}</dd></div>)}
+      </dl>
+    </section>
+
+    {featured.length > 0 && (
+      <section class="wrap mt-20" aria-labelledby="featured">
+        <SectionHead id="featured" cmd={d.home.featuredCommand} title={d.home.featured} href={lp(lang, 'projects')} more={d.home.viewAll} />
+        <div class="grid gap-4 sm:grid-cols-2">
+          {featured.map((p) => <EntryCard entry={p} class={spanCls[p.span] ?? ''} />)}
+        </div>
+      </section>
+    )}
+
+    {latest.length > 0 && (
+      <section class="wrap mt-20" aria-labelledby="latest">
+        <SectionHead id="latest" cmd={d.journal.command} title={d.journal.title} href={lp(lang, 'journal')} more={d.journal.title} />
+        <div class="grid gap-4 sm:grid-cols-3">{latest.map((p) => <EntryCard entry={p} />)}</div>
+      </section>
+    )}
+
+    <div class="wrap"><Faq faq={u.faqHome} lang={lang} /></div>
+
+    <section class="wrap mt-20">
+      <a href={lp(lang, 'contact')} class="card flex items-center justify-between gap-4 !p-6">
+        <div><p class="eyebrow" dir="ltr">$ {d.contact.command}</p><p class="mt-1 text-xl font-semibold">{d.contact.title}</p><p class="text-sm text-muted">{d.contact.intro}</p></div>
+        <ArrowRight class="h-6 w-6 text-accent rtl:-scale-x-100" aria-hidden="true" />
+      </a>
+    </section>
+  </main>
+</Base>

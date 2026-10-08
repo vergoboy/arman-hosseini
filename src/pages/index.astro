@@ -1,0 +1,23 @@
+---
+import Base from '../layouts/Base.astro';
+import Mark from '../components/Mark.astro';
+import { lp } from '../lib/i18n';
+import { site } from '../data/site';
+const title = 'Arman Hosseini | آرمان حسینی — Software Engineer';
+const description = 'Arman Hosseini (آرمان حسینی): software engineer — Rust, Linux systems, networking, reverse engineering and local AI. English and Persian site.';
+---
+<Base chrome={false} seo={{ lang: 'en', path: '/', title, description, alternates: { en: lp('en'), fa: lp('fa') },
+  graph: [{ '@type': 'WebPage', '@id': `${site.url}/#home`, url: site.url, name: title, about: { '@id': `${site.url}/#person` }, inLanguage: ['en', 'fa'] }] }}>
+  <main id="main" class="grid min-h-screen place-items-center px-5 py-16 text-center">
+    <div class="max-w-xl">
+      <Mark size={160} class="float mx-auto h-auto w-40 [animation:float_6s_ease-in-out_infinite]" alt="" />
+      <h1 class="mt-6 text-4xl font-bold tracking-tight">Arman Hosseini <span class="text-accent">·</span> آرمان حسینی</h1>
+      <p class="mt-3 text-muted">Software Engineer — Rust · Linux · Networking · Reverse engineering · AI</p>
+      <p class="mono mt-8 text-xs text-accent" dir="ltr">$ select --language</p>
+      <div class="mt-3 flex flex-wrap justify-center gap-3">
+        <a class="btn btn-primary" href={lp('en')} hreflang="en" lang="en">English</a>
+        <a class="btn" href={lp('fa')} hreflang="fa" lang="fa">فارسی</a>
+      </div>
+    </div>
+  </main>
+</Base>

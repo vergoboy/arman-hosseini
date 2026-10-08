@@ -1,0 +1,37 @@
+---
+import Base from '../layouts/Base.astro';
+import Mark from './Mark.astro';
+import { lp, type Lang } from '../lib/i18n';
+import { useTranslations } from '../i18n/translations';
+import { U } from '../lib/ui';
+import { getEntries } from '../lib/content';
+const { lang } = Astro.props as { lang: Lang };
+const d = useTranslations(lang); const n = U(lang).notFound;
+const latest = (await getEntries('journal', lang)).slice(0, 2);
+const links = [
+  { href: lp(lang), label: d.nav.home }, { href: lp(lang, 'projects'), label: d.nav.projects },
+  { href: lp(lang, 'journal'), label: d.nav.journal }, { href: lp(lang, 'contact'), label: d.nav.contact },
+];
+---
+<Base navKey="" seo={{ lang, path: lp(lang, '404'), title: `${n.title} | Arman Hosseini`, description: n.body, noindex: true }}>
+  <main id="main" class="wrap grid flex-1 place-items-center py-16">
+    <div class="card w-full max-w-2xl !p-0 overflow-hidden">
+      <div class="term-bar"><i></i><i></i><i></i><span class="mono ms-3 text-xs text-muted" dir="ltr">bash — 404</span></div>
+      <div class="grid items-center gap-6 p-6 sm:grid-cols-[1fr_auto] sm:p-8">
+        <div>
+          <p class="mono text-sm text-muted" dir="ltr"><span class="text-accent">$</span> {n.cmd}</p>
+          <p class="mono mt-1 text-sm text-crimson dark:text-red-400" dir="ltr">cat: ./this-page: {lang === 'fa' ? 'No such file or directory' : n.err}</p>
+          <h1 class="mt-6 text-6xl font-bold tracking-tight text-accent">{n.code}</h1>
+          <h2 class="mt-2 text-2xl font-semibold">{n.title}</h2>
+          <p class="mt-3 leading-8 text-muted">{n.body}</p>
+          <p class="mt-6 flex flex-wrap gap-2"><a class="btn btn-primary" href={lp(lang)}>{n.home}</a></p>
+        </div>
+        <Mark size={150} class="mx-auto h-auto w-32 sm:w-36 [animation:float_6s_ease-in-out_infinite]" alt="" />
+      </div>
+      <div class="border-t border-line p-6 sm:px-8">
+        <p class="eyebrow">{n.tryTitle}</p>
+        <ul class="mt-3 flex flex-wrap gap-2">{links.map((l) => <li><a class="chip !text-sm" href={l.href}>{l.label}</a></li>)}{latest.map((e) => <li><a class="chip !text-sm" href={e.url}>{e.title}</a></li>)}</ul>
+      </div>
+    </div>
+  </main>
+</Base>

@@ -1,0 +1,84 @@
+---
+import { Clock, Languages, ArrowLeft, ExternalLink } from '@lucide/astro';
+import Base from '../layouts/Base.astro';
+import Crumbs from './Crumbs.astro';
+import Quick from './Quick.astro';
+import Faq from './Faq.astro';
+import EntryCard from './EntryCard.astro';
+import { alternatesFor, getEntries, renderEntry, tagSlug, type Entry } from '../lib/content';
+import { breadcrumbs, entryNode, faqNode } from '../lib/seo';
+import { fmtDate, isoDate, languages, lp } from '../lib/i18n';
+import { useTranslations } from '../i18n/translations';
+import { U } from '../lib/ui';
+import { site } from '../data/site';
+
+const { entry: e } = Astro.props as { entry: Entry };
+const lang = e.lang;
+const d = useTranslations(lang);
+const u = U(lang);
+const alternates = await alternatesFor(e);
+const { Content, headings } = await renderEntry(e);
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const section = e.collection === 'projects' ? d.projects.title : d.journal.title;
+const crumbs = [
+  { name: d.nav.home, url: lp(lang) },
+  { name: section, url: lp(lang, e.collection) },
+  { name: e.title, url: e.url },
+];
+const related = (await getEntries(e.collection, lang))
+  .filter((x) => x.key !== e.key)
+  .map((x) => ({ x, score: x.tags.filter((t) => e.tags.includes(t)).length }))
+  .sort((a, b) => b.score - a.score).slice(0, 2).map((r) => r.x);
+const graph = [entryNode(e, alternates), breadcrumbs(crumbs), ...(e.faq.length ? [faqNode(e.faq, lang)] : [])];
+const other = languages.find((l) => l !== lang)!;
+---
+<Base navKey={e.collection} seo={{
+  lang, path: e.url, title: e.seo.title, description: e.seo.description, keywords: [...new Set([...e.seo.keywords, ...e.tags])],
+  image: e.seo.image, imageAlt: e.seo.imageAlt, noindex: e.seo.noindex, canonical: e.seo.canonical,
+  type: e.collection === 'journal' ? 'article' : 'website', alternates, published: e.date, updated: e.updated ?? e.date, graph,
+}}>
+  <main id="main" class="wrap flex-1 py-10 sm:py-14">
+    <article class="mx-auto max-w-3xl" itemscope itemtype="https://schema.org/Article">
+      <Crumbs items={crumbs} />
+      <header class="mt-8">
+        {e.tagline && <p class="eyebrow">{e.tagline}</p>}
+        <h1 class="mt-2 text-3xl font-bold leading-tight tracking-tight sm:text-5xl" itemprop="headline">{e.title}</h1>
+        <p class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted">
+          <span>{u.by} <a class="text-primary hover:text-accent" href={lp(lang, 'about')}>{lang === 'fa' ? site.alternateName : site.name}</a></span>
+          <time datetime={isoDate(e.date)} itemprop="datePublished">{u.published}: {fmtDate(e.date, lang)}</time>
+          {e.updated && <time datetime={isoDate(e.updated)} itemprop="dateModified">{u.updated}: {fmtDate(e.updated, lang)}</time>}
+          <span class="inline-flex items-center gap-1"><Clock class="h-3.5 w-3.5" aria-hidden="true" />{e.readingMin} {u.readMin}</span>
+          {alternates[other] && <a class="inline-flex items-center gap-1 text-accent hover:underline" href={alternates[other]} hreflang={other} lang={other}><Languages class="h-3.5 w-3.5" aria-hidden="true" />{d.lang[other]}</a>}
+        </p>
+        {e.tags.length > 0 && <ul class="mt-4 flex flex-wrap gap-2">{e.tags.map((t) => <li><a class="chip" dir="auto" href={`${lp(lang, 'tags')}${tagSlug(t)}/`}>{t}</a></li>)}</ul>}
+      </header>
+
+      {e.seo.image && <img src={e.seo.image} alt={e.seo.imageAlt ?? ''} class="mt-8 w-full rounded-2xl border border-line" width="1200" height="630" fetchpriority="high" decoding="async" />}
+      {e.summary && <div class="mt-8"><Quick lang={lang} text={e.summary} /></div>}
+
+      {e.links.length > 0 && (
+        <p class="mt-6 flex flex-wrap gap-2">{e.links.map((l) => <a class="btn" href={l.href} rel="noopener"><ExternalLink class="h-4 w-4" aria-hidden="true" />{l.label}</a>)}</p>
+      )}
+
+      {toc.length > 2 && (
+        <nav class="card mt-8 !p-4" aria-label={u.toc}>
+          <p class="eyebrow">{u.toc}</p>
+          <ol class="mt-2 space-y-1 text-sm">{toc.map((h) => <li class:list={[h.depth === 3 && 'ps-4']}><a class="text-muted hover:text-accent" href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+        </nav>
+      )}
+
+      <div class="prose-body mt-8" itemprop="articleBody">
+        {Content && <Content />}
+      </div>
+      {e.highlights.length > 0 && (<section class="mt-10"><h2 class="text-xl font-semibold">{d.projects.whatItDoes}</h2><ul class="mt-3 list-disc space-y-1.5 ps-6 marker:text-accent">{e.highlights.map((h) => <li>{h}</li>)}</ul></section>)}
+
+      <Faq faq={e.faq} lang={lang} />
+    </article>
+
+    {related.length > 0 && (
+      <section class="mx-auto mt-16 max-w-3xl"><h2 class="mb-4 text-xl font-semibold">{u.related}</h2>
+        <div class="grid gap-4 sm:grid-cols-2">{related.map((r) => <EntryCard entry={r} />)}</div></section>
+    )}
+    <p class="mx-auto mt-10 max-w-3xl"><a class="btn" href={lp(lang, e.collection)}><ArrowLeft class="h-4 w-4 rtl:-scale-x-100" aria-hidden="true" /><span dir="ltr">{e.collection === 'projects' ? d.projects.back : d.journal.back}</span></a></p>
+  </main>
+</Base>

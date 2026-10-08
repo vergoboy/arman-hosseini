@@ -1,0 +1,15 @@
+---
+import { ChevronRight } from '@lucide/astro';
+import type { Crumb } from '../lib/seo';
+const { items } = Astro.props as { items: Crumb[] };
+---
+<nav aria-label="Breadcrumb" class="font-mono text-xs text-muted">
+  <ol class="flex flex-wrap items-center gap-1.5">
+    {items.map((c, i) => (
+      <li class="flex items-center gap-1.5">
+        {i > 0 && <ChevronRight class="h-3 w-3 rtl:-scale-x-100" aria-hidden="true" />}
+        {i === items.length - 1 ? <span aria-current="page" class="text-primary">{c.name}</span> : <a href={c.url} class="hover:text-accent">{c.name}</a>}
+      </li>
+    ))}
+  </ol>
+</nav>

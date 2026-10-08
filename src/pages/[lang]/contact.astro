@@ -1,0 +1,35 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import BrandIcon from '../../components/BrandIcon.astro';
+import { breadcrumbs, staticSeo } from '../../lib/seo';
+import { languages, lp, type Lang } from '../../lib/i18n';
+import { useTranslations } from '../../i18n/translations';
+import { site } from '../../data/site';
+export function getStaticPaths() { return languages.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const d = useTranslations(lang); const c = d.contact;
+const s = staticSeo(lang, 'contact', d.meta.contact);
+const crumbs = [{ name: d.nav.home, url: lp(lang) }, { name: c.title, url: lp(lang, 'contact') }];
+---
+<Base navKey="contact" seo={{ lang, path: lp(lang, 'contact'), ...s, alternates: { en: lp('en', 'contact'), fa: lp('fa', 'contact') },
+  graph: [breadcrumbs(crumbs), { '@type': 'ContactPage', url: site.url + lp(lang, 'contact'), inLanguage: lang, mainEntity: { '@id': `${site.url}/#person` } }] }}>
+  <main id="main" class="wrap flex-1 py-10 sm:py-14">
+    <Crumbs items={crumbs} />
+    <p class="eyebrow mt-8" dir="ltr">$ {c.command}</p>
+    <h1 class="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">{c.title}</h1>
+    <p class="mt-4 max-w-2xl text-lg text-muted">{c.intro} {c.availabilityNote}</p>
+    <ul class="mt-10 grid gap-4 sm:grid-cols-2">
+      {c.methods.map((m) => {
+        const Tag = m.href ? 'a' : 'div';
+        return (
+          <li><Tag class:list={['card flex h-full items-start gap-4', m.href && 'hoverable']} {...(m.href ? { href: m.href, rel: 'me noopener' } : {})}>
+            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-raised text-accent"><BrandIcon name={m.icon} class="h-5 w-5" /></span>
+            <span class="min-w-0"><span class="block font-semibold">{m.label}</span>
+              <span class="mono block truncate text-sm text-accent" dir="ltr">{m.handle}</span>
+              <span class="block text-sm text-muted">{m.note}</span></span></Tag></li>
+        );
+      })}
+    </ul>
+  </main>
+</Base>

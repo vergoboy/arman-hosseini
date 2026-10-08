@@ -1,0 +1,44 @@
+---
+import Base from '../../layouts/Base.astro';
+import Crumbs from '../../components/Crumbs.astro';
+import Quick from '../../components/Quick.astro';
+import Faq from '../../components/Faq.astro';
+import { breadcrumbs, faqNode, staticSeo } from '../../lib/seo';
+import { languages, lp, type Lang } from '../../lib/i18n';
+import { useTranslations } from '../../i18n/translations';
+import { U } from '../../lib/ui';
+import { site } from '../../data/site';
+export function getStaticPaths() { return languages.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const d = useTranslations(lang); const u = U(lang);
+const a = d.about;
+const s = staticSeo(lang, 'about', d.meta.about);
+const crumbs = [{ name: d.nav.home, url: lp(lang) }, { name: a.title, url: lp(lang, 'about') }];
+---
+<Base navKey="about" seo={{ lang, path: lp(lang, 'about'), ...s, type: 'profile', alternates: { en: lp('en', 'about'), fa: lp('fa', 'about') },
+  graph: [breadcrumbs(crumbs), { '@type': 'ProfilePage', url: site.url + lp(lang, 'about'), name: s.title, inLanguage: lang, mainEntity: { '@id': `${site.url}/#person` } }, faqNode(u.faqHome, lang)] }}>
+  <main id="main" class="wrap flex-1 py-10 sm:py-14">
+    <Crumbs items={crumbs} />
+    <p class="eyebrow mt-8" dir="ltr">$ {a.command}</p>
+    <h1 class="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">{a.title}</h1>
+    <div class="mt-6 max-w-3xl"><Quick lang={lang} label={u.whoLabel} text={u.who} /></div>
+    <p class="mt-6 max-w-3xl text-lg leading-8 text-muted">{a.intro}</p>
+
+    <section class="mt-14" aria-labelledby="tl"><h2 id="tl" class="text-2xl font-semibold">{a.timelineTitle}</h2>
+      <ol class="mt-6 space-y-5 border-s border-line ps-6">
+        {a.timeline.map((t) => (
+          <li class="relative"><span class="absolute -start-[1.9rem] top-2 h-3 w-3 rounded-full border-2 border-accent bg-page"></span>
+            <p class="eyebrow">{t.period}</p><h3 class="mt-1 text-lg font-semibold">{t.title}</h3><p class="mt-1 leading-7 text-muted">{t.body}</p></li>
+        ))}
+      </ol></section>
+
+    <section class="mt-14" aria-labelledby="st"><h2 id="st" class="text-2xl font-semibold">{a.stackTitle}</h2>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {a.stack.map((g) => <div class="card"><h3 class="eyebrow">{g.group}</h3><ul class="mt-3 flex flex-wrap gap-2">{g.items.map((i) => <li class="chip">{i}</li>)}</ul></div>)}
+      </div></section>
+
+    <section class="mt-14" aria-labelledby="cu"><h2 id="cu" class="text-2xl font-semibold">{a.currentlyTitle}</h2>
+      <ul class="mt-4 space-y-2">{a.currently.map((c) => <li class="flex gap-3"><span class="mono text-accent" aria-hidden="true">›</span><span class="text-muted">{c}</span></li>)}</ul></section>
+    <Faq faq={u.faqHome} lang={lang} />
+  </main>
+</Base>

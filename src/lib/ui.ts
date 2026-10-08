@@ -1,0 +1,91 @@
+/** Strings added in v2 (the original copy stays in src/i18n/translations.ts). */
+import type { Lang } from './i18n';
+
+const en = {
+  quick: 'Quick answer',
+  whoLabel: 'Who is Arman Hosseini?',
+  who: 'Arman Hosseini (Persian: آرمان حسینی) is a software engineer focused on Rust, Linux systems, network engineering, hardware reverse engineering and local AI. He builds Vegord, BidandoonVPN and open-source tooling around OpenRGB.',
+  facts: [
+    ['Role', 'Software Engineer'],
+    ['Focus', 'Rust · Linux · Networking · Reverse engineering · AI'],
+    ['Languages', 'English, Persian'],
+    ['Code', 'github.com/vergoboy · codeberg.org/vergoboy'],
+  ] as [string, string][],
+  faqTitle: 'Frequently asked',
+  faqHome: [
+    { q: 'Who is Arman Hosseini?', a: 'Arman Hosseini is a software engineer who builds native systems in Rust, network tooling (Xray, VLESS, TLS fragmentation, DoH) and hardware reverse-engineering projects such as the Intel Arc B580 RGB controller for OpenRGB.' },
+    { q: 'What is Vegord?', a: 'Vegord is a native Rust networking tool that replaces Electron-style overhead with TLS fragmentation, DNS-over-HTTPS and ISP-aware smart routing.' },
+    { q: 'Where can I find his code?', a: 'Primary archive: github.com/vergoboy. Active development: codeberg.org/vergoboy.' },
+    { q: 'How can I contact Arman?', a: 'Email hi@arman-hosseini.ir or message @the_vergoboy on Telegram. English and Persian both work.' },
+  ],
+  toc: 'On this page',
+  related: 'Keep reading',
+  allTags: 'All topics',
+  tag: 'Topic',
+  tagIntro: (t: string) => `Everything tagged “${t}”.`,
+  availableIn: 'Also available in',
+  readMin: 'min read',
+  published: 'Published',
+  updated: 'Updated',
+  by: 'By',
+  links: 'Links',
+  notFound: {
+    code: '404',
+    cmd: 'cat ./this-page',
+    err: 'No such file or directory',
+    title: 'Page not found',
+    body: 'The page you wanted is not here — it may have moved, been unpublished, or never existed. The penguin checked.',
+    home: 'Go home',
+    tryTitle: 'Try one of these',
+  },
+  rss: 'RSS feed',
+  theme: 'Theme',
+  lowData: 'No tracking cookies. Static HTML, no JS framework.',
+  pickLang: 'Choose your language',
+};
+
+const fa: typeof en = {
+  quick: 'پاسخ کوتاه',
+  whoLabel: 'آرمان حسینی کیست؟',
+  who: 'آرمان حسینی (Arman Hosseini) مهندس نرم‌افزار است و روی Rust، سیستم‌های لینوکسی، مهندسی شبکه، مهندسی معکوس سخت‌افزار و هوش مصنوعی محلی کار می‌کند. او سازنده Vegord و BidandoonVPN و ابزارهای متن‌باز پیرامون OpenRGB است.',
+  facts: [
+    ['نقش', 'مهندس نرم‌افزار'],
+    ['حوزه کاری', 'Rust · لینوکس · شبکه · مهندسی معکوس · هوش مصنوعی'],
+    ['زبان‌ها', 'فارسی، انگلیسی'],
+    ['کد', 'github.com/vergoboy · codeberg.org/vergoboy'],
+  ],
+  faqTitle: 'پرسش‌های متداول',
+  faqHome: [
+    { q: 'آرمان حسینی کیست؟', a: 'آرمان حسینی مهندس نرم‌افزاری است که سیستم‌های بومی با Rust، ابزارهای شبکه (Xray، VLESS، تکه‌تکه‌سازی TLS و DoH) و پروژه‌های مهندسی معکوس سخت‌افزار مثل کنترلر RGB کارت Intel Arc B580 برای OpenRGB می‌سازد.' },
+    { q: 'Vegord چیست؟', a: 'Vegord یک ابزار شبکه بومی با Rust است که با تکه‌تکه‌سازی TLS، DNS روی HTTPS و مسیریابی هوشمند آگاه از ISP، سربار کلاینت‌های مبتنی بر Electron را حذف می‌کند.' },
+    { q: 'کدهای او را کجا ببینم؟', a: 'آرشیو اصلی: github.com/vergoboy و توسعه فعال: codeberg.org/vergoboy.' },
+    { q: 'چطور با آرمان در تماس باشم؟', a: 'ایمیل hi@arman-hosseini.ir یا پیام در تلگرام به @the_vergoboy. فارسی و انگلیسی هر دو مشکلی ندارد.' },
+  ],
+  toc: 'در این صفحه',
+  related: 'ادامه مطالعه',
+  allTags: 'همه موضوع‌ها',
+  tag: 'موضوع',
+  tagIntro: (t: string) => `همه نوشته‌های برچسب «${t}».`,
+  availableIn: 'این صفحه به زبان‌های دیگر',
+  readMin: 'دقیقه مطالعه',
+  published: 'انتشار',
+  updated: 'به‌روزرسانی',
+  by: 'نویسنده',
+  links: 'پیوندها',
+  notFound: {
+    code: '۴۰۴',
+    cmd: 'cat ./this-page',
+    err: 'چنین فایل یا پوشه‌ای وجود ندارد',
+    title: 'صفحه پیدا نشد',
+    body: 'صفحه‌ای که دنبالش بودید اینجا نیست؛ شاید جابه‌جا شده، از حالت انتشار خارج شده یا هیچ‌وقت وجود نداشته. پنگوئن همه‌جا را گشت.',
+    home: 'بازگشت به خانه',
+    tryTitle: 'این‌ها را امتحان کنید',
+  },
+  rss: 'خوراک RSS',
+  theme: 'پوسته',
+  lowData: 'بدون کوکی ردیابی. HTML ایستا، بدون فریم‌ورک جاوااسکریپت.',
+  pickLang: 'زبان خود را انتخاب کنید',
+};
+
+export const ui = { en, fa };
+export const U = (lang: Lang) => ui[lang];

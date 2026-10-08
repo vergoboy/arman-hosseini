@@ -1,0 +1,11 @@
+---
+import { Sparkles } from '@lucide/astro';
+import { U } from '../lib/ui';
+import type { Lang } from '../lib/i18n';
+interface Props { lang: Lang; label?: string; text: string }
+const { lang, label = U(lang).quick, text } = Astro.props;
+---
+<aside class="card border-accent/40 bg-raised/60" aria-label={label}>
+  <p class="eyebrow flex items-center gap-2"><Sparkles class="h-3.5 w-3.5" aria-hidden="true" />{label}</p>
+  <p class="mt-2 text-[1.05rem] leading-8">{text}</p>
+</aside>

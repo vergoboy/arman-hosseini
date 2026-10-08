@@ -1,67 +1,38 @@
 ---
-import {
-  localizedPath,
-  navRoutes,
-  normalizePath,
-  t,
-  useTranslations,
-  type Lang,
-} from '../i18n/translations';
-import Logo from './Logo.astro';
-import ThemeToggle from './ThemeToggle.astro';
-import LangSwitcher from './LangSwitcher.astro';
+import { Sun, Languages } from '@lucide/astro';
+import Mark from './Mark.astro';
+import { lp, languages, type Lang } from '../lib/i18n';
+import { t, navRoutes } from '../i18n/translations';
+import { site } from '../data/site';
 
-interface Props {
-  lang: Lang;
-}
-
-const { lang } = Astro.props;
-const d = useTranslations(lang);
-const path = normalizePath(Astro.url.pathname);
-
-const homeHref = localizedPath(lang, '');
-
-const links = (Object.keys(navRoutes) as (keyof typeof navRoutes)[]).map((key) => ({
-  key,
-  href: localizedPath(lang, navRoutes[key]),
-  label: d.nav[key],
+interface Props { lang: Lang; navKey?: string; alternates?: Partial<Record<Lang, string>>; path: string }
+const { lang, navKey = '', alternates = {}, path } = Astro.props;
+const other = languages.find((l) => l !== lang)!;
+const rest = path.replace(/^\/(en|fa)(?=\/|$)/, '') || '/';
+const switchHref = alternates[other] ?? lp(other, rest === '/' ? '' : rest);
+const items = (['about', 'projects', 'journal', 'contact'] as const).map((k) => ({
+  k, href: lp(lang, navRoutes[k]), label: t(`nav.${k}`, lang),
 }));
-
-const isActive = (href: string) => (href === homeHref ? path === homeHref : path.startsWith(href));
 ---
-
-<header class="sticky top-0 z-40 border-b border-line bg-page/80 backdrop-blur">
-  <div
-    class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-6 py-4"
-  >
-    <Logo lang={lang} />
-
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
-      <nav aria-label={t('nav.label', lang)}>
-        <ul class="flex items-center gap-4 sm:gap-6">
-          {
-            links.map((link) => (
-              <li>
-                <a
-                  href={link.href}
-                  aria-current={isActive(link.href) ? 'page' : undefined}
-                  class:list={[
-                    'font-mono text-sm transition-colors duration-300 hover:text-accent',
-                    isActive(link.href) ? 'text-accent' : 'text-muted',
-                  ]}
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </nav>
-
-      <div class="flex items-center gap-2">
-        <ThemeToggle lang={lang} />
-        <LangSwitcher lang={lang} />
-      </div>
-    </div>
+<header class="sticky top-0 z-40 border-b border-line/80 bg-page/80 backdrop-blur-md">
+  <div class="wrap flex items-center gap-3 py-2.5">
+    <a href={lp(lang)} class="flex items-center gap-2.5 font-semibold" aria-label={site.name}>
+      <Mark size={30} alt="" />
+      <span class="hidden sm:inline">{lang === 'fa' ? site.alternateName : site.name}</span>
+    </a>
+    <nav aria-label={t('nav.label', lang)} class="ms-auto flex min-w-0 items-center gap-1 overflow-x-auto text-sm">
+      {items.map((i) => (
+        <a href={i.href} aria-current={navKey === i.k ? 'page' : undefined}
+           class:list={['whitespace-nowrap rounded-md px-3 py-1.5 text-muted hover:text-primary', navKey === i.k && '!text-accent bg-raised']}>
+          {i.label}
+        </a>
+      ))}
+    </nav>
+    <a href={switchHref} hreflang={other} lang={other} class="btn !px-2.5 !py-1.5 font-mono text-xs" aria-label={t('lang.label', lang)}>
+      <Languages class="h-4 w-4" aria-hidden="true" />{other.toUpperCase()}
+    </a>
+    <button type="button" data-theme-toggle class="btn !px-2.5 !py-1.5" aria-label={t('theme.toggle', lang)}>
+      <Sun class="h-4 w-4" aria-hidden="true" />
+    </button>
   </div>
 </header>

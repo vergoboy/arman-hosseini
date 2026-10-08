@@ -1,0 +1,5 @@
+---
+interface Props { size?: number; class?: string; alt?: string }
+const { size = 32, class: c = '', alt = 'Arman Hosseini penguin mark' } = Astro.props;
+---
+<img src="/assets/Vargo/mark.svg" width={size} height={Math.round(size * 1.066)} alt={alt} class={c} decoding="async" />

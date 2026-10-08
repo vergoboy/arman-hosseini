@@ -1,0 +1,29 @@
+---
+import Base from '../../../layouts/Base.astro';
+import EntryCard from '../../../components/EntryCard.astro';
+import Crumbs from '../../../components/Crumbs.astro';
+import { getTags, tagSlug } from '../../../lib/content';
+import { breadcrumbs } from '../../../lib/seo';
+import { languages, lp, type Lang } from '../../../lib/i18n';
+import { useTranslations } from '../../../i18n/translations';
+import { U } from '../../../lib/ui';
+export async function getStaticPaths() {
+  const out = [];
+  for (const lang of languages) for (const [tag, entries] of await getTags(lang)) out.push({ params: { lang, tag: tagSlug(tag) }, props: { tag, entries } });
+  return out;
+}
+const lang = Astro.params.lang as Lang;
+const { tag, entries } = Astro.props;
+const d = useTranslations(lang); const u = U(lang);
+const path = `${lp(lang, 'tags')}${tagSlug(tag)}/`;
+const crumbs = [{ name: d.nav.home, url: lp(lang) }, { name: tag, url: path }];
+---
+<Base navKey="" seo={{ lang, path, title: `${tag} | ${d.nav.home} – Arman Hosseini`, description: u.tagIntro(tag), noindex: entries.length < 2, graph: [breadcrumbs(crumbs)] }}>
+  <main id="main" class="wrap flex-1 py-10 sm:py-14">
+    <Crumbs items={crumbs} />
+    <p class="eyebrow mt-8">{u.tag}</p>
+    <h1 class="mt-2 text-4xl font-bold tracking-tight" dir="auto">{tag}</h1>
+    <p class="mt-3 text-muted">{u.tagIntro(tag)}</p>
+    <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{entries.map((e) => <EntryCard entry={e} showDate />)}</div>
+  </main>
+</Base>

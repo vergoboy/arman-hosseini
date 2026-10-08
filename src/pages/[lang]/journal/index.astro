@@ -1,0 +1,31 @@
+---
+import Base from '../../../layouts/Base.astro';
+import EntryCard from '../../../components/EntryCard.astro';
+import Crumbs from '../../../components/Crumbs.astro';
+import Quick from '../../../components/Quick.astro';
+import { getEntries } from '../../../lib/content';
+import { breadcrumbs, staticSeo } from '../../../lib/seo';
+import { languages, lp, type Lang } from '../../../lib/i18n';
+import { useTranslations } from '../../../i18n/translations';
+import { site } from '../../../data/site';
+export function getStaticPaths() { return languages.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const d = useTranslations(lang);
+const entries = await getEntries('journal', lang);
+const s = staticSeo(lang, 'journal', d.meta.journal);
+const crumbs = [{ name: d.nav.home, url: lp(lang) }, { name: d.journal.title, url: lp(lang, 'journal') }];
+const graph = [breadcrumbs(crumbs), { '@type': 'CollectionPage', name: d.journal.title, inLanguage: lang, url: site.url + lp(lang, 'journal'), mainEntity: { '@type': 'ItemList', itemListElement: entries.map((e, i) => ({ '@type': 'ListItem', position: i + 1, url: site.url + e.url, name: e.title })) } }];
+---
+<Base navKey="journal" seo={{ lang, path: lp(lang, 'journal'), ...s, alternates: { en: lp('en', 'journal'), fa: lp('fa', 'journal') }, graph }}>
+  <main id="main" class="wrap flex-1 py-10 sm:py-14">
+    <Crumbs items={crumbs} />
+    <p class="eyebrow mt-8" dir="ltr">$ {d.journal.command}</p>
+    <h1 class="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">{d.journal.title}</h1>
+    <div class="mt-6 max-w-2xl"><Quick lang={lang} text={d.journal.intro} /></div>
+    {entries.length === 0 ? (
+      <div class="card mt-10 text-center text-muted"><p>{(d.journal as any).empty}</p></div>
+    ) : (
+      <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{entries.map((e) => <EntryCard entry={e} />)}</div>
+    )}
+  </main>
+</Base>
