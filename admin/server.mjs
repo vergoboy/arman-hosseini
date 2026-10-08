@@ -5,7 +5,8 @@
  *   node admin/server.mjs --hash     print a password hash for ADMIN_PASSWORD_HASH
  */
 import http from 'node:http';
-import { readFile, mkdir } from 'node:fs/promises';
+import { readFile, mkdir, stat } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
@@ -16,8 +17,10 @@ import * as content from './lib/content.mjs';
 import * as build from './lib/build.mjs';
 import * as stats from './lib/stats.mjs';
 import * as ingest from './lib/ingest.mjs';
+import * as subs from './lib/submissions.mjs';
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
+const MEDIA_TYPES = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', avif: 'image/avif', gif: 'image/gif', svg: 'image/svg+xml', mp4: 'video/mp4', m4v: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', ogv: 'video/ogg', mp3: 'audio/mpeg', ogg: 'audio/ogg', wav: 'audio/wav', pdf: 'application/pdf' };
 const SESSION_MS = 12 * 3600_000;
 
 if (process.argv.includes('--hash')) {
@@ -99,7 +102,8 @@ async function overview() {
   for (const e of [...published, ...entries.filter((x) => x.kind === 'static')]) for (const i of e.health.issues) issues[i.code] = { level: i.level, count: (issues[i.code]?.count ?? 0) + 1 };
   return {
     state: store.getState(), running: build.isRunning(), builds: builds.slice(0, 5),
-    counts: { total: real.length, published: published.length, draft: real.filter((e) => e.status === 'draft').length, disabled: real.filter((e) => e.status === 'disabled').length, vault: real.filter((e) => e.origin === 'vault').length },
+    pending: await subs.pendingCount(),
+    counts: { total: real.length, published: published.length, draft: real.filter((e) => e.status === 'draft').length, disabled: real.filter((e) => e.status === 'disabled').length, studio: real.filter((e) => e.origin === 'studio').length },
     seo: { average: avg, issues, worst: published.slice().sort((a, b) => a.health.score - b.health.score).slice(0, 6).map((e) => ({ key: e.key, title: e.title, lang: e.lang, score: e.health.score })) },
     stats: stats.summary(14), live: await build.currentRelease(),
   };
@@ -140,6 +144,14 @@ const routes = {
   'POST /api/translations/link': { run: async (req, res, q, body) => ({ translationKey: await content.linkTranslation(body.a, body.b) }) },
   'POST /api/translations/unlink': { run: async (req, res, q, body) => { await content.unlinkTranslation(body.key); return { ok: true }; } },
   'GET /api/media': { run: async () => ingest.listMedia() },
+  'GET /api/submissions': { run: async (req, res, q) => subs.listSubmissions(q.get('status') || undefined) },
+  'GET /api/submissions/item': { run: async (req, res, q) => subs.getSubmission(q.get('id')) },
+  'POST /api/submissions/approve': { run: async (req, res, q, body) => {
+    const meta = await subs.approveSubmission(body.id, { overwrite: Boolean(body.overwrite) });
+    const buildInfo = body.build ? await build.startBuild(`approved ${meta.key}`) : null;
+    return { ok: true, meta, build: buildInfo, state: store.getState() };
+  } },
+  'POST /api/submissions/reject': { run: async (req, res, q, body) => ({ ok: true, meta: await subs.rejectSubmission(body.id, body.reason) }) },
   'POST /api/media': { run: async (req, res, q) => ingest.saveMedia(q.get('name') || 'image.png', await readBody(req, 8_000_000)), raw: true },
   'DELETE /api/media': { run: async (req, res, q) => { await ingest.deleteMedia(q.get('url')); return { ok: true }; } },
   'GET /api/stats': { run: async (req, res, q) => stats.summary(Math.min(90, Math.max(7, Number(q.get('days')) || 30))) },
@@ -170,20 +182,29 @@ async function handleApi(req, res, url) {
     return send(res, 204, '');
   }
 
-  // FIT plugin: bearer token
-  if (url.pathname === '/api/ingest' || url.pathname === '/api/ingest/manifest') {
+  // Obsidian plugin (Vergo MDX Studio): bearer token. Nothing it sends goes live without approval.
+  if (url.pathname.startsWith('/api/studio/')) {
     const tok = await store.checkToken((req.headers.authorization || '').replace(/^Bearer\s+/i, ''));
     if (!tok) throw new HttpError(401, 'invalid token');
-    if (!apiLimit(`ing:${tok.id}`)) throw new HttpError(429, 'slow down');
-    if (key === 'GET /api/ingest/manifest') return send(res, 200, await ingest.getManifest());
-    if (key === 'POST /api/ingest') {
-      const body = JSON.parse((await readBody(req, 40_000_000)).toString('utf8') || '{}');
-      const result = await ingest.ingest(body);
-      let buildInfo = null;
-      if (!body.dryRun && body.build !== false && (result.written || result.deleted || result.media)) buildInfo = await build.startBuild(`ingest (${tok.name})`);
-      return send(res, 200, { ...result, build: buildInfo });
-    }
+    if (!apiLimit(`stu:${tok.id}`)) throw new HttpError(429, 'slow down');
+    if (key === 'GET /api/studio/ping') return send(res, 200, { ok: true, token: tok.name, mdxValidation: await ingest.mdxValidationActive(), maxMediaMb: Math.round(subs.MAX_MEDIA_BYTES / 1048576), site: SITE_URL });
+    if (key === 'POST /api/studio/media/check') return send(res, 200, await subs.mediaStatus((await readJsonBody(req)).names));
+    if (key === 'PUT /api/studio/media') return send(res, 200, await subs.stageMedia(url.searchParams.get('name') || '', req, Number(req.headers['content-length']) || 0));
+    if (key === 'POST /api/studio/submissions') return send(res, 200, await subs.createSubmission(await readJsonBody(req, 2_000_000), tok));
     throw new HttpError(404, 'not found');
+  }
+
+  if (key === 'GET /api/submissions/media') {
+    requireAuth(req);
+    const name = url.searchParams.get('name') || '';
+    if (!subs.MEDIA_NAME.test(name)) throw new HttpError(400, 'bad name');
+    for (const dir of [subs.STUDIO_MEDIA_DIR, path.join(DATA_DIR, 'staging', 'media')]) {
+      const f = path.join(dir, name); const st = await stat(f).catch(() => null);
+      if (!st) continue;
+      res.writeHead(200, { 'Content-Type': MEDIA_TYPES[path.extname(name).slice(1)] || 'application/octet-stream', 'Content-Length': st.size, 'Cache-Control': 'private, max-age=300', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox" });
+      return createReadStream(f).pipe(res);
+    }
+    throw new HttpError(404, 'media not found');
   }
 
   const route = routes[key];

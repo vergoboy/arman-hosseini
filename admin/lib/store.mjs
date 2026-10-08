@@ -118,7 +118,7 @@ export async function listTokens() {
 export async function createToken(name) {
   const tokens = await readJson(f('tokens.json'), []);
   const secret = `vgp_${rand(32)}`;
-  const rec = { id: rand(6), name: String(name || 'FIT').slice(0, 60), hash: sha256(secret), created: Date.now(), lastUsed: null };
+  const rec = { id: rand(6), name: String(name || 'Studio').slice(0, 60), hash: sha256(secret), created: Date.now(), lastUsed: null };
   tokens.push(rec); await writeJson(f('tokens.json'), tokens);
   await audit('admin', 'token.create', rec.id, rec.name);
   return { id: rec.id, name: rec.name, token: secret };

@@ -18,7 +18,7 @@ Own the search results for **«آرمان حسینی» / "Arman Hosseini"** in c
 | Rendering | Astro, static output, no UI framework | Lowest load, cleanest HTML for crawlers |
 | Look | CLI/terminal inspired, penguin mark, dark default + light | Chosen in the planning chat, now on the brand palette |
 | Languages | `/en/` + `/fa/`, root `/` = language picker (x-default) | hreflang pairs via `translationKey` |
-| Content | Obsidian → FIT → HTTPS ingest → build | Write once in the vault, mobile friendly |
+| Content | Obsidian → Vergo MDX Studio → Inbox (approval) → build | Write once in the vault; every page needs a human OK before it goes live |
 | SEO data | Overrides in `content-meta/overrides.json`, not in notes | Survives every re-publish |
 | Admin | Zero-dependency Node service, session + CSRF, scrypt | Nothing to patch, tiny attack surface |
 | Analytics | Cookie-less beacon, daily-salted visitor hash, DNT respected | Page views / uniques / referrers without consent banners |

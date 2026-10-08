@@ -7,8 +7,3 @@ current.next
 .admin-data/
 .env
 *.log
-
-# local-only artifacts
-*.ppm
-chat-export-*.json
-__pycache__/

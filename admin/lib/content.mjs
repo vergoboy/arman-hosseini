@@ -37,7 +37,7 @@ export async function scanContent() {
       const relRepo = `${collection}/${rel}`;
       rows.push({
         key: `${collection}/${lang}/${slug}`, collection, lang, slug, file, relPath: relRepo,
-        fm: data, body, origin: manifest.files[relRepo] ? 'vault' : 'native',
+        fm: data, body, origin: manifest.files[relRepo] ? 'studio' : 'native',
         ext: path.extname(file).slice(1).toLowerCase(),
       });
     }
@@ -146,7 +146,7 @@ export async function getEntry(key) {
 }
 
 /* ---------- native (dashboard-owned) entries ---------- */
-function assertNative(row) { if (row.origin !== 'native') throw new HttpError(409, 'this entry comes from the Obsidian vault; edit it there (or disable it here)'); }
+function assertNative(row) { if (row.origin !== 'native') throw new HttpError(409, 'this page was sent from Obsidian; edit it there and send it again (or disable it here)'); }
 
 export async function createNative({ collection, lang, title, slug, body = '', summary = '', tags = [], mdx = false }) {
   if (!COLLECTIONS.includes(collection) || !LANGS.includes(lang)) throw new HttpError(422, 'bad collection or language');

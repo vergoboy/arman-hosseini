@@ -11,7 +11,7 @@ faq:
   - q: "Why a static site?"
     a: "Static HTML is the fastest thing a server can send, costs almost nothing to host and gives search engines and AI answer engines clean, complete pages."
   - q: "How do notes get published?"
-    a: "The FIT plugin in Obsidian validates the notes, sends them over HTTPS to the admin service, which compiles every MDX file, rebuilds the site and flips a symlink atomically."
+    a: "An Obsidian plugin compiles and previews the MDX, then sends the page and its media to the admin service. It lands in an inbox; after I approve it the site is rebuilt and a symlink is flipped atomically."
 ---
 This site is deliberately boring in the places that matter for speed and discoverability, and a little unusual where it makes my life easier.
 
@@ -25,7 +25,7 @@ Each page carries its own title, description, keywords, featured image with alt 
 
 ## From Obsidian to the web
 
-Notes live in my vault. A publish step validates every MDX file, converts Obsidian syntax such as wikilinks and image embeds, and sends only what changed. If one note is broken nothing is published and I get the file and line number.
+Notes live in my vault. The Studio plugin previews the page with the site's own styles, compiles the MDX, converts Obsidian syntax such as image embeds, and uploads the page together with its images and videos. A broken page is refused with the file and line number, and a valid one waits in an inbox for my approval.
 
 ## Atomic releases
 

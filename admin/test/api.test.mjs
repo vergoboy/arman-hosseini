@@ -8,6 +8,7 @@ const root = await mkdtemp(path.join(tmpdir(), 'admin-test-'));
 await mkdir(path.join(root, 'src/content/journal/en'), { recursive: true });
 await mkdir(path.join(root, 'content-meta'), { recursive: true });
 await writeFile(path.join(root, 'content-meta/overrides.json'), '{}');
+await mkdir(path.join(root, 'public'), { recursive: true });
 await writeFile(path.join(root, 'src/content/journal/en/hello.md'), '---\ntitle: "Hello"\ndate: 2026-01-02\nlang: en\ntags: [rust]\nsummary: short\n---\nBody text here.\n');
 process.env.SITE_DIR = root;
 process.env.ADMIN_PASSWORD = 'correct horse battery';
@@ -61,23 +62,61 @@ test('native create / edit / translation link / delete', async () => {
   assert.equal((await call('DELETE', `/api/entry?key=${encodeURIComponent(a.key)}`)).status, 200);
 });
 
-test('ingest: token auth, mdx validation, atomic reject, prune only vault files', async () => {
-  const { token } = (await call('POST', '/api/tokens', { name: 'test' })).json;
-  const ing = (body, t = token) => fetch(base + '/api/ingest', { method: 'POST', headers: { authorization: `Bearer ${t}`, 'content-type': 'application/json' }, body: JSON.stringify(body) }).then(async (r) => ({ status: r.status, json: await r.json() }));
-  assert.equal((await ing({}, 'wrong')).status, 401);
-  const broken = await ing({ files: [{ path: 'journal/en/good.md', content: '# ok' }, { path: 'journal/en/bad.mdx', content: '---\ntitle: x\n---\n<Unclosed>\n' }], build: false });
-  assert.equal(broken.status, 422); assert.equal(broken.json.errors[0].path, 'journal/en/bad.mdx');
-  await assert.rejects(readFile(path.join(root, 'src/content/journal/en/good.md')), 'nothing written when any file is invalid');
-  const good = await ing({ files: [{ path: 'journal/en/vault-note.mdx', content: 'Hi {1 + 1}' }], build: false });
-  assert.equal(good.json.written, 1);
-  const written = await readFile(path.join(root, 'src/content/journal/en/vault-note.mdx'), 'utf8');
-  assert.match(written, /lang: "en"/); assert.match(written, /title: "vault-note"/);
-  assert.equal((await ing({ files: [{ path: 'journal/en/vault-note.mdx', content: 'Hi {1 + 1}' }], build: false })).json.unchanged, 1);
-  const del = await ing({ delete: ['journal/en/vault-note.mdx', 'journal/en/hello.md'], build: false });
-  assert.equal(del.json.deleted, 1, 'hello.md is not vault-owned so it must survive');
-  await readFile(path.join(root, 'src/content/journal/en/hello.md'));
-  const manifest = await fetch(base + '/api/ingest/manifest', { headers: { authorization: `Bearer ${token}` } }).then((r) => r.json());
-  assert.deepEqual(manifest.files, {});
+test('studio: token auth, media staging, mdx validation, approval inbox', async () => {
+  const { createHash } = await import('node:crypto');
+  const { token } = (await call('POST', '/api/tokens', { name: 'studio-test' })).json;
+  const auth = { authorization: `Bearer ${token}` };
+  const studio = (m, p, body, headers = {}) => fetch(base + p, { method: m, headers: { ...auth, ...headers }, body }).then(async (r) => ({ status: r.status, json: await r.json() }));
+  const sj = (p, obj) => studio('POST', p, JSON.stringify(obj), { 'content-type': 'application/json' });
+
+  assert.equal((await fetch(base + '/api/studio/ping', { headers: { authorization: 'Bearer nope' } })).status, 401);
+  const ping = await studio('GET', '/api/studio/ping'); assert.equal(ping.json.ok, true); assert.equal(ping.json.mdxValidation, true);
+
+  // media: hash-named, verified, staged (not public yet)
+  const img = Buffer.from('fake-png-bytes-1234567890');
+  const name = createHash('sha256').update(img).digest('hex').slice(0, 16) + '.png';
+  assert.deepEqual((await sj('/api/studio/media/check', { names: [name] })).json.missing, [name]);
+  assert.equal((await studio('PUT', `/api/studio/media?name=${'0'.repeat(16)}.png`, img)).status, 422, 'wrong hash rejected');
+  assert.equal((await studio('PUT', `/api/studio/media?name=${name}`, img)).status, 200);
+  assert.deepEqual((await sj('/api/studio/media/check', { names: [name] })).json.missing, []);
+  await assert.rejects(readFile(path.join(root, 'public/media/studio', name)), 'not public before approval');
+
+  const note = (body) => `---\ntitle: "Studio note"\ntags: [a]\n---\n${body}`;
+  const missing = await sj('/api/studio/submissions', { collection: 'journal', lang: 'en', slug: 's1', content: note('x'), media: ['f'.repeat(16) + '.png'] });
+  assert.equal(missing.status, 422);
+  const broken = await sj('/api/studio/submissions', { collection: 'journal', lang: 'en', slug: 's1', content: note('<Unclosed>\n'), media: [] });
+  assert.equal(broken.status, 422); assert.ok(broken.json.errors[0].line >= 1);
+  assert.equal((await sj('/api/studio/submissions', { collection: 'blog', lang: 'en', slug: 's1', content: 'x' })).status, 422);
+
+  const ok = await sj('/api/studio/submissions', { collection: 'journal', lang: 'en', slug: 's1', content: note(`Hello {1 + 1} ![a](/media/studio/${name})`), media: [name] });
+  assert.equal(ok.status, 200); assert.equal(ok.json.status, 'pending');
+  const again = await sj('/api/studio/submissions', { collection: 'journal', lang: 'en', slug: 's1', content: note('v2 body'), media: [] });
+  const pending = (await call('GET', '/api/submissions?status=pending')).json;
+  assert.equal(pending.length, 1, 'same key supersedes the older pending submission');
+  assert.equal(pending[0].id, again.json.id);
+
+  // approve v1-like flow with media: resubmit with media then approve
+  const withMedia = (await sj('/api/studio/submissions', { collection: 'journal', lang: 'en', slug: 's1', content: note(`pic ![a](/media/studio/${name})`), media: [name] })).json;
+  const before = (await call('GET', '/api/overview')).json.state.dirty;
+  const appr = await call('POST', '/api/submissions/approve', { id: withMedia.id });
+  assert.equal(appr.status, 200);
+  const written = await readFile(path.join(root, 'src/content/journal/en/s1.mdx'), 'utf8');
+  assert.match(written, /lang: "en"/); assert.match(written, /slug: "s1"/); assert.match(written, /pic !\[a\]/);
+  assert.equal((await readFile(path.join(root, 'public/media/studio', name))).length, img.length, 'media moved on approval');
+  assert.ok((await call('GET', '/api/overview')).json.state.dirty > before);
+  assert.equal((await call('GET', '/api/entries')).json.find((e) => e.key === 'journal/en/s1').origin, 'studio');
+  assert.equal((await call('POST', '/api/submissions/approve', { id: withMedia.id })).status, 409, 'cannot approve twice');
+  assert.equal((await call('PUT', '/api/entry/body?key=journal%2Fen%2Fs1', { body: 'x' })).status, 409, 'studio pages are not body-editable in the dashboard');
+
+  // slug used by a dashboard-created page needs explicit overwrite
+  await call('POST', '/api/entries', { collection: 'journal', lang: 'en', title: 'Mine', slug: 'mine', body: 'native' });
+  const clash = (await sj('/api/studio/submissions', { collection: 'journal', lang: 'en', slug: 'mine', content: note('from obsidian'), media: [] })).json;
+  const denied = await call('POST', '/api/submissions/approve', { id: clash.id }); assert.equal(denied.status, 409); assert.equal(denied.json.conflict, true);
+  assert.equal((await call('POST', '/api/submissions/approve', { id: clash.id, overwrite: true })).status, 200);
+
+  const rej = (await sj('/api/studio/submissions', { collection: 'projects', lang: 'fa', slug: 'p1', content: note('p'), media: [] })).json;
+  assert.equal((await call('POST', '/api/submissions/reject', { id: rej.id, reason: 'no' })).json.meta.status, 'rejected');
+  await assert.rejects(readFile(path.join(root, 'src/content/projects/fa/p1.mdx')));
 });
 
 test('build switches symlink atomically and can roll back', async () => {

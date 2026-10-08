@@ -42,7 +42,7 @@ const statusBadge = (s) => Badge(t(s), s === 'published' ? 'ok' : s === 'draft' 
 
 /* ---------- state ---------- */
 const st = { view: 'pages', overview: null, entries: [], q: '', fCol: '', fLang: '', fStatus: '', sel: new Set(), drawer: null, builds: null };
-const NAV = [['overview', '◧'], ['pages', '▤'], ['media', '▣'], ['analytics', '◔'], ['builds', '⇪'], ['settings', '⚙']];
+const NAV = [['overview', '◧'], ['pages', '▤'], ['inbox', '✉'], ['media', '▣'], ['analytics', '◔'], ['builds', '⇪'], ['settings', '⚙']];
 
 async function load(force = true) {
   const [entries, overview] = await Promise.all([api('GET', '/api/entries'), api('GET', '/api/overview')]);
@@ -61,7 +61,7 @@ async function renderRoot() {
   $app.append(h('div', { class: 'shell' },
     h('aside', { class: 'side' },
       h('div', { class: 'brand' }, h('img', { src: '/admin/favicon.svg', alt: '' }), h('span', {}, 'Vergo Admin')),
-      NAV.map(([k, ic]) => h('button', { class: 'nav' + (st.view === k ? ' on' : ''), 'data-v': k, onclick: () => go(k) }, h('span', {}, ic), t(k), k === 'builds' ? h('span', { class: 'badge ac pending', id: 'navpend' }) : null)),
+      NAV.map(([k, ic]) => h('button', { class: 'nav' + (st.view === k ? ' on' : ''), 'data-v': k, onclick: () => go(k) }, h('span', {}, ic), t(k), k === 'builds' ? h('span', { class: 'badge ac pending', id: 'navpend' }) : null, k === 'inbox' ? h('span', { class: 'badge ac pending', id: 'navinbox' }) : null)),
       h('div', { class: 'sp' }),
       h('button', { class: 'nav', onclick: () => { document.documentElement.classList.toggle('light'); localStorage.setItem('adm-theme', document.documentElement.classList.contains('light') ? 'light' : 'dark'); } }, h('span', {}, '◐'), t('theme')),
       h('button', { class: 'nav', onclick: () => { L = L === 'fa' ? 'en' : 'fa'; localStorage.setItem('adm-lang', L); renderRoot(); } }, h('span', {}, '文'), L === 'fa' ? 'English' : 'فارسی'),
@@ -87,6 +87,7 @@ function renderTop() {
   const top = document.getElementById('top'); if (!top || !st.overview) return;
   const { state, running } = st.overview;
   const dirty = state.dirty;
+  const ib = document.getElementById('navinbox'); if (ib) { ib.textContent = num(st.overview.pending || 0); ib.classList.toggle('on', (st.overview.pending || 0) > 0); }
   const nav = document.getElementById('navpend'); if (nav) { nav.textContent = num(dirty); nav.classList.toggle('on', dirty > 0); }
   top.replaceChildren(
     h('h1', {}, t(st.view)),
@@ -112,7 +113,7 @@ async function pollBuild() {
 
 function renderMain() {
   const page = document.getElementById('page'); if (!page) return;
-  const fn = { overview: vOverview, pages: vPages, media: vMedia, analytics: vAnalytics, builds: vBuilds, settings: vSettings }[st.view];
+  const fn = { overview: vOverview, pages: vPages, inbox: vInbox, media: vMedia, analytics: vAnalytics, builds: vBuilds, settings: vSettings }[st.view];
   page.replaceChildren(); Promise.resolve(fn(page)).catch(fail);
 }
 
@@ -121,6 +122,7 @@ function vOverview(page) {
   const o = st.overview; if (!o) return;
   const s = o.stats;
   page.append(
+    o.pending ? h('div', { class: 'card', style: 'margin-bottom:14px;border-color:var(--ac);cursor:pointer;display:flex;gap:10px;align-items:center', onclick: () => go('inbox') }, '✉', h('b', {}, t('needsReview')), Badge(num(o.pending), 'ac')) : null,
     h('div', { class: 'grid g4' },
       stat(num(o.counts.published) + ' / ' + num(o.counts.total), t('total')),
       stat(num(s.totals.views), t('last30').replace('۳۰', '۱۴').replace('30', '14')),
@@ -171,7 +173,7 @@ function row(e) {
   return h('tr', { class: 'row', onclick: () => openEditor(e.key) },
     h('td', { onclick: (ev) => ev.stopPropagation() }, h('input', { type: 'checkbox', checked: st.sel.has(e.key), onchange: (ev) => { ev.target.checked ? st.sel.add(e.key) : st.sel.delete(e.key); renderMain(); } })),
     h('td', {}, h('span', { class: 't-title', dir: 'auto' }, e.title), h('span', { class: 'hint mono' }, e.url)),
-    h('td', {}, Badge(t(e.collection === 'static' ? 'static' : e.collection)), ' ', e.origin === 'vault' ? Badge(t('vault')) : null),
+    h('td', {}, Badge(t(e.collection === 'static' ? 'static' : e.collection)), ' ', e.origin === 'studio' ? Badge(t('studio')) : null),
     h('td', {}, Badge(e.lang.toUpperCase())),
     h('td', {}, statusBadge(e.status), e.seo.noindex ? Badge('noindex', 'warn') : null),
     h('td', {}, num(e.views ?? 0)),
@@ -265,7 +267,7 @@ async function openEditor(key) {
     panel.replaceChildren();
     if (tab === 'general') {
       panel.append(
-        e.origin === 'vault' ? h('div', { class: 'card hint', style: 'margin-bottom:14px' }, '🔒 ' + t('fromVault')) : null,
+        e.origin === 'studio' ? h('div', { class: 'card hint', style: 'margin-bottom:14px' }, '🔒 ' + t('fromVault')) : null,
         field(t('status'), h('select', { onchange: (ev) => { f.status = ev.target.value; refresh(); } }, ['published', 'draft', 'disabled'].map((s) => h('option', { value: s, selected: f.status === s }, t(s))))),
         field(t('title'), text('title')),
         field(t('summary'), h('textarea', { dir: 'auto', oninput: (ev) => { f.summary = ev.target.value; refresh(); } }, f.summary)),
@@ -335,6 +337,51 @@ function translationsPanel(e, redraw) {
   return wrap;
 }
 
+
+/* ---------- inbox (submissions from the Obsidian plugin) ---------- */
+async function vInbox(page) {
+  const all = await api('GET', '/api/submissions');
+  const pend = all.filter((x) => x.status === 'pending'), done = all.filter((x) => x.status !== 'pending').slice(0, 20);
+  const rowOf = (x) => h('tr', { class: 'row', onclick: () => openSubmission(x.id) },
+    h('td', {}, h('span', { class: 't-title', dir: 'auto' }, x.title), h('span', { class: 'hint mono' }, x.key)),
+    h('td', {}, Badge(t(x.collection)), ' ', Badge(x.lang.toUpperCase())),
+    h('td', {}, x.media.length ? `▣ ${num(x.media.length)}` : '—'),
+    h('td', { class: 'hint' }, x.by, ' · ', when(x.createdAt)),
+    h('td', {}, Badge(t(x.status === 'pending' ? 'pendingS' : x.status), x.status === 'approved' ? 'ok' : x.status === 'rejected' ? 'err' : 'warn')));
+  const table = (rows) => h('div', { class: 'card', style: 'padding:0;overflow:auto;margin-bottom:18px' }, h('table', {}, h('tbody', {}, rows.map(rowOf))));
+  page.append(pend.length ? table(pend) : h('div', { class: 'card empty' }, t('inboxEmpty')), done.length ? h('h3', {}, t('history')) : null, done.length ? table(done) : null);
+}
+async function openSubmission(id) {
+  closeDrawer();
+  let x; try { x = await api('GET', `/api/submissions/item?id=${id}`); } catch (e) { return fail(e); }
+  const bg = h('div', { class: 'drawer-bg', onclick: closeDrawer });
+  const isMedia = (n) => /\.(png|jpe?g|webp|avif|gif|svg)$/i.test(n), isVideo = (n) => /\.(mp4|webm|mov|m4v|ogv)$/i.test(n);
+  const conflict = x.existing?.origin === 'dashboard';
+  let overwrite = false;
+  const act = async (build) => {
+    try { await api('POST', '/api/submissions/approve', { id, build, overwrite }); toast(t('approved')); closeDrawer(); await load(false); renderMain(); if (build) pollBuild(); }
+    catch (e) { if (e.data?.conflict) { overwrite = true; toast(t('conflictNative'), true); drawer.querySelector('[data-ow]').style.display = 'flex'; } else fail(e); }
+  };
+  const drawer = h('div', { class: 'drawer' },
+    h('header', {}, h('h2', { dir: 'auto' }, x.title), Badge(t(x.collection)), Badge(x.lang.toUpperCase()), h('button', { class: 'btn sm', onclick: closeDrawer }, '✕')),
+    h('div', { class: 'body' },
+      h('p', { class: 'hint' }, `${t('sentBy')} ${x.by} · ${when(x.createdAt)} · `, h('span', { class: 'mono' }, x.key), x.vaultPath ? [' · ', h('span', { class: 'mono' }, x.vaultPath)] : null),
+      h('div', { class: 'bar' }, x.existing ? Badge(t('isUpdate'), 'warn') : Badge(t('isNew'), 'ok')),
+      h('div', { 'data-ow': '', class: 'card', style: 'display:none;gap:8px;align-items:center;border-color:var(--red);margin-bottom:12px' }, t('conflictNative')),
+      x.media.length ? [h('h4', {}, `${t('mediaFiles')} (${num(x.media.length)})`), h('div', { class: 'media', style: 'margin-bottom:16px' }, x.media.map((m) => h('figure', {},
+        isMedia(m.name) ? h('img', { src: `/api/submissions/media?name=${m.name}`, alt: '', loading: 'lazy' }) : isVideo(m.name) ? h('video', { src: `/api/submissions/media?name=${m.name}`, controls: true, preload: 'metadata', style: 'width:100%;aspect-ratio:4/3;background:#000' }) : h('div', { class: 'empty' }, m.name.split('.').pop()),
+        h('figcaption', { class: 'mono' }, `${m.name} · ${m.bytes > 1048576 ? (m.bytes / 1048576).toFixed(1) + ' MB' : Math.round(m.bytes / 1024) + ' KB'}${m.missing ? ' ⚠' : ''}`))))] : null,
+      h('h4', {}, t('source')), h('pre', { class: 'log', style: 'max-height:50vh' }, x.content),
+      x.existing ? [h('h4', {}, t('current2')), h('pre', { class: 'log', style: 'max-height:30vh;opacity:.7' }, x.existing.body)] : null),
+    x.status === 'pending' ? h('footer', {},
+      h('button', { class: 'btn pri', onclick: () => act(true) }, '⇪ ' + t('approveBuild')),
+      h('button', { class: 'btn', onclick: () => act(false) }, '✓ ' + t('approve')),
+      h('span', { style: 'margin-inline-start:auto' }),
+      h('button', { class: 'btn danger', onclick: async () => { const reason = prompt(t('rejectReason')) ?? null; if (reason === null) return; try { await api('POST', '/api/submissions/reject', { id, reason }); toast(t('rejected')); closeDrawer(); await load(false); renderMain(); } catch (e) { fail(e); } } }, t('reject'))) : h('footer', {}, Badge(t(x.status), x.status === 'approved' ? 'ok' : 'err'), x.reason ? h('span', { class: 'hint' }, x.reason) : null));
+  st.drawer = { el: [bg, drawer], dirty: () => false, tryClose: closeDrawer };
+  document.body.append(bg, drawer);
+}
+
 /* ---------- media ---------- */
 async function pickMedia(onPick) {
   const list = await api('GET', '/api/media');
@@ -382,7 +429,7 @@ async function vBuilds(page) {
 /* ---------- settings ---------- */
 async function vSettings(page) {
   const [tokens, backups, audit] = await Promise.all([api('GET', '/api/tokens'), api('GET', '/api/backups'), api('GET', '/api/audit')]);
-  const name = h('input', { type: 'text', placeholder: t('tokenName'), value: 'FIT' }); const out = h('div', {});
+  const name = h('input', { type: 'text', placeholder: t('tokenName'), value: 'Obsidian' }); const out = h('div', {});
   const cur = h('input', { type: 'password', autocomplete: 'current-password' }), nxt = h('input', { type: 'password', autocomplete: 'new-password' });
   page.append(h('div', { class: 'grid g2' },
     h('div', { class: 'card' }, h('h3', { style: 'margin-top:0' }, t('tokens')), h('p', { class: 'hint' }, t('tokenHint')),
