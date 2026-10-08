@@ -1,10 +1,11 @@
 """Smoke tests for the arman-hosseini.ir deployment.
 
 Covers the local deploy config, the build output, and the live server:
-HTTP->HTTPS, the served pages, the TLS certificate, and the fact that the
+HTTP->HTTPS, the served pages, the admin dashboard behind its nginx proxy,
+the API's auth requirement, the TLS certificate, and the fact that the
 other vhosts on 45.135.242.135 are still answering.
 
-    python3 -m pytest -q tests/test_deployment.py
+    python3 -m pytest tests/test_deployment.py
 """
 
 from __future__ import annotations
@@ -72,14 +73,16 @@ def test_build_output_has_every_required_page():
         "en/index.html",
         "fa/index.html",
         "en/projects/index.html",
+        "404.html",
         "robots.txt",
-        "sitemap-index.xml",
+        "sitemap.xml",
+        "llms.txt",
     ):
         assert (ROOT / "dist" / page).is_file(), f"missing build output: dist/{page}"
 
 
 def test_build_output_declares_canonical_origin():
-    sitemap = (ROOT / "dist" / "sitemap-index.xml").read_text()
+    sitemap = (ROOT / "dist" / "sitemap.xml").read_text()
     assert HTTPS in sitemap
     homepage = (ROOT / "dist" / "en" / "index.html").read_text()
     assert f'href="{HTTPS}/en/"' in homepage
@@ -105,7 +108,30 @@ def test_https_serves_the_english_homepage():
 def test_https_serves_the_persian_homepage():
     status, _, body = request(DOMAIN, "/fa/", port=443, tls=True, server_hostname=DOMAIN)
     assert status == 200
-    assert "آرمین حسینی".encode() in body
+    assert "آرمان حسینی".encode() in body
+
+
+def test_root_is_the_language_picker():
+    status, headers, body = request(DOMAIN, "/", port=443, tls=True, server_hostname=DOMAIN)
+    assert status == 200
+    assert headers.get("Content-Type", "").startswith("text/html")
+    assert "arman-hosseini.ir/en/".encode() in body
+
+
+def test_admin_dashboard_is_served_through_nginx():
+    status, headers, body = request(DOMAIN, "/admin/", port=443, tls=True, server_hostname=DOMAIN)
+    assert status == 200
+    assert headers.get("Content-Type", "").startswith("text/html")
+    assert b"<title>" in body
+
+
+def test_api_requires_authentication():
+    for endpoint in ("/api/stats", "/api/entries"):
+        status, _, _ = request(DOMAIN, endpoint, port=443, tls=True, server_hostname=DOMAIN)
+        assert status == 401, f"{endpoint} returned {status} without a token"
+
+    status, _, body = request(DOMAIN, "/api/health", port=443, tls=True, server_hostname=DOMAIN)
+    assert status == 200, f"/api/health returned {status}"
 
 
 def test_unknown_path_is_404_not_a_wrong_page():
@@ -139,7 +165,8 @@ def test_other_sites_still_answer(url):
 def test_nginx_config_is_valid_and_site_is_deployed():
     result = subprocess.run(
         ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", f"ubuntu@{HOST}",
-         "sudo nginx -t && sudo find /opt/arman-hosseini -type f | wc -l"],
+         "sudo nginx -t && test -L /opt/arman-hosseini/current "
+         "&& sudo find /opt/arman-hosseini/releases -type f | wc -l"],
         capture_output=True,
         text=True,
         timeout=60,
