@@ -7,3 +7,38 @@ current.next
 .admin-data/
 .env
 *.log
+deploy*.sh
+scripts/deploy-local.sh
+sync-*.sh
+
+# Deploy scripts
+scripts/deploy.sh
+deploy.sh
+deploy-local.sh
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Editors / IDEs
+*.swp
+.idea/
+.vscode/
