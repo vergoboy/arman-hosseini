@@ -4,6 +4,14 @@ import { COLLECTIONS, CONTENT_DIR, LANGS, SITE_URL, STATIC_PAGES } from '../conf
 import { buildDocument, parseFrontmatter, slugify } from './frontmatter.mjs';
 import { audit, markDirty, patchOverride, readManifest, readOverrides, writeManifest } from './store.mjs';
 import { HttpError, writeAtomic } from './util.mjs';
+import { checkMdx } from './ingest.mjs';
+import { checkPolicy } from './policy.mjs';
+
+async function assertValidMdx(ext, source) {
+  if (ext !== 'mdx') return;
+  const errs = [...(await checkMdx(source)), ...checkPolicy(source)];
+  if (errs.length) throw new HttpError(422, 'MDX is invalid – not saved', { errors: errs });
+}
 
 const EXT = /\.(md|mdx)$/i;
 
@@ -155,6 +163,8 @@ export async function createNative({ collection, lang, title, slug, body = '', s
   const file = path.join(CONTENT_DIR, collection, lang, `${s}.${mdx ? 'mdx' : 'md'}`);
   if ((await stat(file).catch(() => null)) || (await scanContent()).some((r) => r.key === `${collection}/${lang}/${s}`)) throw new HttpError(409, 'slug already exists');
   const today = new Date().toISOString().slice(0, 10);
+  const doc = buildDocument({ title, date: today, lang, tags, summary, slug: s }, body);
+  await assertValidMdx(mdx ? 'mdx' : 'md', doc);
   await writeAtomic(file, buildDocument({ title, date: today, lang, tags, summary, slug: s }, body));
   await audit('admin', 'create', `${collection}/${lang}/${s}`, '');
   await markDirty('create');
@@ -170,6 +180,7 @@ export async function saveBody(key, { body, title }) {
   let next = src;
   if (typeof title === 'string' && title.trim()) next = setKeys(next, { title });
   if (typeof body === 'string') { const m = /^---[ \t]*\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/.exec(next); next = (m ? m[0] : '') + (m ? '\n' : '') + body.replace(/^\n+/, ''); }
+  await assertValidMdx(row.ext, next);
   await writeAtomic(row.file, next);
   await audit('admin', 'edit-body', key, ''); await markDirty('edit');
 }

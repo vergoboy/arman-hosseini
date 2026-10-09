@@ -135,3 +135,28 @@ test('beacon counts views, ignores bots and admin paths', async () => {
   const s = (await call('GET', '/api/stats?days=7')).json;
   assert.equal(s.totals.views, 2); assert.equal(s.referrers[0].key, 'news.ycombinator.com');
 });
+
+test('policy: only built-in components; no foreign imports, exports or server APIs', async () => {
+  const { checkPolicy } = await import('../lib/policy.mjs');
+  const fm = '---\ntitle: "T"\n---\n';
+  assert.deepEqual(checkPolicy(fm + 'import { Callout } from "@/components/Callout"\n\n<Callout>ok</Callout>\n<Tabs><Tab label="a">x</Tab></Tabs>'), []);
+  assert.deepEqual(checkPolicy(fm + '```js\nimport fs from "fs"\n<Evil />\n```\nand `<Evil />` in code'), [], 'code is ignored');
+  const bad = checkPolicy(fm + 'import fs from "node:fs"\n\n<Evil x="1" />\n\nexport const a = 1\n\nKey: {process.env.ADMIN_PASSWORD}\n');
+  assert.equal(bad.length, 4);
+  assert.deepEqual(bad.map((e) => e.line), [4, 6, 8, 10], 'lines count the frontmatter');
+  // the same rules gate the inbox and the dashboard editor
+  const { token } = (await call('POST', '/api/tokens', { name: 'policy' })).json;
+  const r = await fetch(base + '/api/studio/submissions', { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' }, body: JSON.stringify({ collection: 'journal', lang: 'en', slug: 'evil', content: fm + '<Unknown />\n', media: [] }) });
+  assert.equal(r.status, 422);
+  assert.match((await r.json()).errors[0].message, /Unknown component/);
+  const made = await call('POST', '/api/entries', { collection: 'journal', lang: 'en', title: 'X', slug: 'x-mdx', mdx: true, body: 'import a from "b"\n' });
+  assert.equal(made.status, 422);
+});
+
+test('live check: published pages are flagged until a build contains them', async () => {
+  await call('POST', '/api/entries', { collection: 'journal', lang: 'en', title: 'Live probe', slug: 'live-probe', body: 'x' });
+  const e = (await call('GET', '/api/entries')).json.find((x) => x.key === 'journal/en/live-probe');
+  assert.equal(e.live, false, 'new page is not in the live release yet');
+  const r = (await call('GET', '/api/entry/live?key=journal%2Fen%2Flive-probe')).json;
+  assert.equal(r.inRelease, false); assert.equal(r.status, 'published'); assert.ok(r.liveDir);
+});

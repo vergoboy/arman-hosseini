@@ -25,6 +25,10 @@ export const S = {
     inboxEmpty: 'چیزی برای بررسی نیست.', pendingWord: 'در انتظار تایید', history: 'سابقه', approve: 'تایید', approveBuild: 'تایید و انتشار', reject: 'رد کردن', rejectReason: 'دلیل رد (اختیاری)',
     newer: 'نسخه‌ی ارسالی', current2: 'نسخه‌ی فعلی سایت', isNew: 'صفحه‌ی جدید', isUpdate: 'جایگزین صفحه‌ی موجود می‌شود', conflictNative: 'این نشانی قبلاً با صفحه‌ای که در پنل ساخته شده استفاده شده است', overwrite: 'جایگزین کن',
     sentBy: 'ارسال‌شده از', mediaFiles: 'فایل‌های رسانه', approved: 'تایید شد', rejected: 'رد شد', pendingS: 'در انتظار', source: 'متن MDX', needsReview: 'صفحه‌ی ارسالی منتظر تایید شماست',
+    checkLive: 'بررسی زنده بودن', waitBuild: 'منتظر ساخت', liveOk: 'زنده است ✓ — آدرس عمومی درست جواب می‌دهد.',
+    liveNotBuilt: 'این صفحه هنوز در نسخه‌ی زنده‌ی سایت ساخته نشده. دکمه‌ی «انتشار تغییرات» (بالای صفحه) را بزنید و منتظر ساخت موفق بمانید.',
+    liveMisroute: 'صفحه در نسخه‌ی ساخته‌شده هست ولی آدرس عمومی هنوز ۴۰۴ می‌دهد؛ یعنی nginx پوشه‌ی دیگری را سرو می‌کند. root را روی مسیر زیر بگذارید و nginx را reload کنید:',
+    liveNotPublished: 'وضعیت صفحه «منتشرشده» نیست (پیش‌نویس/غیرفعال)، پس ساخته نمی‌شود.', liveUnknown: 'از سرور نتوانستم آدرس عمومی را بررسی کنم:', liveDir: 'پوشه‌ی زنده (root در nginx)',
     chars: 'نویسه', words: 'کلمه', open: 'باز کردن در سایت', none: 'هیچ', slug: 'نشانی (slug)', collection: 'بخش', mdx: 'فرمت MDX',
   },
   en: {
@@ -53,6 +57,10 @@ export const S = {
     inboxEmpty: 'Nothing to review.', pendingWord: 'pending', history: 'History', approve: 'Approve', approveBuild: 'Approve & publish', reject: 'Reject', rejectReason: 'Reason (optional)',
     newer: 'Submitted version', current2: 'Currently on the site', isNew: 'New page', isUpdate: 'Replaces the existing page', conflictNative: 'This slug is already used by a page created in the dashboard', overwrite: 'Replace it',
     sentBy: 'Sent from', mediaFiles: 'Media files', approved: 'Approved', rejected: 'Rejected', pendingS: 'Pending', source: 'MDX source', needsReview: 'A submitted page is waiting for your approval',
+    checkLive: 'Check if live', waitBuild: 'waiting for build', liveOk: 'Live ✓ — the public address answers correctly.',
+    liveNotBuilt: 'This page is not in the live release yet. Press “Publish changes” (top bar) and wait for a successful build.',
+    liveMisroute: 'The page is in the built release but the public address still returns 404 — nginx is serving a different folder. Point its root here and reload nginx:',
+    liveNotPublished: 'The page status is not “published” (draft/disabled), so it is not built.', liveUnknown: 'Could not check the public address from the server:', liveDir: 'Live folder (nginx root)',
     chars: 'chars', words: 'words', open: 'Open on site', none: 'None', slug: 'Slug', collection: 'Section', mdx: 'MDX format',
   },
 };

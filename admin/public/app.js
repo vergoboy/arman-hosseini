@@ -175,7 +175,7 @@ function row(e) {
     h('td', {}, h('span', { class: 't-title', dir: 'auto' }, e.title), h('span', { class: 'hint mono' }, e.url)),
     h('td', {}, Badge(t(e.collection === 'static' ? 'static' : e.collection)), ' ', e.origin === 'studio' ? Badge(t('studio')) : null),
     h('td', {}, Badge(e.lang.toUpperCase())),
-    h('td', {}, statusBadge(e.status), e.seo.noindex ? Badge('noindex', 'warn') : null),
+    h('td', {}, statusBadge(e.status), e.live === false ? [' ', Badge(t('waitBuild'), 'warn')] : null, e.seo.noindex ? Badge('noindex', 'warn') : null),
     h('td', {}, num(e.views ?? 0)),
     h('td', {}, Score(e.health.score)),
     h('td', { onclick: (ev) => ev.stopPropagation() }, toggle));
@@ -232,7 +232,7 @@ async function openEditor(key) {
   const hint = h('span', { class: 'hint' });
   const bg = h('div', { class: 'drawer-bg', onclick: () => tryClose() });
   const drawer = h('div', { class: 'drawer', role: 'dialog' },
-    h('header', {}, h('h2', { dir: 'auto' }, e.title), Badge(e.lang.toUpperCase()), h('a', { class: 'btn sm', href: e.url, target: '_blank', rel: 'noopener' }, '↗ ' + t('open')), h('button', { class: 'btn sm', onclick: () => tryClose() }, '✕')),
+    h('header', {}, h('h2', { dir: 'auto' }, e.title), Badge(e.lang.toUpperCase()), h('a', { class: 'btn sm', href: e.url, target: '_blank', rel: 'noopener' }, '↗ ' + t('open')), isStatic ? null : h('button', { class: 'btn sm', onclick: () => checkLive(e) }, '◉ ' + t('checkLive')), h('button', { class: 'btn sm', onclick: () => tryClose() }, '✕')),
     tabs, panel, h('footer', {}, saveBtn, hint, h('span', { style: 'margin-inline-start:auto' }),
       e.origin === 'native' ? h('button', { class: 'btn danger', onclick: async () => { if (!confirm(t('confirmDel'))) return; try { await api('DELETE', `/api/entry?key=${encodeURIComponent(key)}`); closeDrawer(true); await load(); } catch (x) { fail(x); } } }, t('del')) : null));
   st.drawer = { el: [bg, drawer], dirty };
@@ -325,6 +325,19 @@ async function openEditor(key) {
   st.drawer.tryClose = tryClose;
   drawTabs(); drawPanel(); refresh();
 }
+async function checkLive(e) {
+  try {
+    const r = await api('GET', `/api/entry/live?key=${encodeURIComponent(e.key)}`);
+    const dlg = h('div', { class: 'cmdk', style: 'z-index:130', onclick: (ev) => ev.target === dlg && dlg.remove() }, h('div', { style: 'padding:20px' },
+      h('h3', { style: 'margin-top:0' }, t('checkLive')),
+      h('div', { class: 'issue' }, h('span', { class: 'dot ' + (r.inRelease ? '' : 'error') }), h('span', {}, `release: ${r.release ?? '—'} · ${r.inRelease ? '✓ in release' : '✖ not in release'}`)),
+      h('div', { class: 'issue' }, h('span', { class: 'dot ' + (r.publicStatus === 200 ? '' : 'error') }), h('span', { class: 'mono' }, `${r.url} → ${r.publicStatus ?? r.error ?? '—'}`)),
+      h('p', {}, r.status !== 'published' ? t('liveNotPublished') : !r.inRelease ? t('liveNotBuilt') : r.publicStatus === 200 ? t('liveOk') : r.publicStatus ? t('liveMisroute') : `${t('liveUnknown')} ${r.error}`),
+      r.status === 'published' && r.inRelease && r.publicStatus && r.publicStatus !== 200 ? h('code', { class: 'mono', style: 'display:block;padding:10px;background:var(--bg);border:1px solid var(--ac);border-radius:8px;user-select:all' }, r.liveDir) : null,
+      h('p', { class: 'hint', style: 'margin-bottom:0' }, `${t('liveDir')}: `, h('span', { class: 'mono' }, r.liveDir))));
+    document.body.append(dlg);
+  } catch (x) { fail(x); }
+}
 function closeDrawer() { st.drawer?.el.forEach((x) => x.remove()); st.drawer = null; }
 
 function translationsPanel(e, redraw) {
@@ -416,9 +429,10 @@ async function vAnalytics(page) {
 /* ---------- builds ---------- */
 async function vBuilds(page) {
   const { running, builds } = await api('GET', '/api/builds');
+  const liveDir = st.overview?.liveDir;
   let logId = builds[0]?.id; const logBox = h('pre', { class: 'log' }, '');
   const loadLog = async (id) => { logId = id; const r = await api('GET', `/api/builds/log?id=${id}`); logBox.textContent = r.log || '—'; logBox.scrollTop = logBox.scrollHeight; };
-  page.append(h('div', { class: 'card', style: 'padding:0;overflow:auto' }, h('table', {}, h('thead', {}, h('tr', {}, ['ID', t('status'), '', ''].map((x) => h('th', {}, x)))),
+  page.append(liveDir ? h('p', { class: 'hint' }, `${t('liveDir')}: `, h('code', { class: 'mono' }, liveDir)) : null, h('div', { class: 'card', style: 'padding:0;overflow:auto' }, h('table', {}, h('thead', {}, h('tr', {}, ['ID', t('status'), '', ''].map((x) => h('th', {}, x)))),
     h('tbody', {}, builds.map((b) => h('tr', { class: 'row', onclick: () => loadLog(b.id) }, h('td', { class: 'mono' }, b.id, ' ', b.current ? Badge(t('live'), 'ok') : null), h('td', {}, Badge(t(b.status === 'running' ? 'running' : b.status), b.status === 'success' ? 'ok' : b.status === 'failed' ? 'err' : 'warn'), ' ', b.pages ? h('span', { class: 'hint' }, `${num(b.pages)} pages`) : null),
       h('td', { class: 'hint' }, b.reason, ' · ', when(b.startedAt)), h('td', { onclick: (e) => e.stopPropagation() }, b.status === 'success' && !b.current ? h('button', { class: 'btn sm', onclick: async () => { if (!confirm(t('rollback') + '?')) return; try { await api('POST', '/api/rollback', { id: b.id }); toast(t('saved')); renderMain(); } catch (x) { fail(x); } } }, '↩ ' + t('rollback')) : null)))))),
     h('h3', {}, t('buildLog')), logBox);

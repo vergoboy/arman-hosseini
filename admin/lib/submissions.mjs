@@ -12,6 +12,7 @@ import { COLLECTIONS, CONTENT_DIR, DATA_DIR, LANGS, MEDIA_DIR } from '../config.
 import { parseFrontmatter, setKeys, splitFrontmatter } from './frontmatter.mjs';
 import { scanContent } from './content.mjs';
 import { checkMdx } from './ingest.mjs';
+import { checkPolicy } from './policy.mjs';
 import { audit, markDirty, readManifest, writeManifest } from './store.mjs';
 import { HttpError, rand, readJson, sha256, writeAtomic, writeJson } from './util.mjs';
 
@@ -114,8 +115,8 @@ export async function createSubmission(input, token) {
 
   const content = normalize({ collection, lang, slug, source: input.content });
   if (ext === 'mdx') {
-    const errs = await checkMdx(content);
-    if (errs.length) throw new HttpError(422, 'MDX does not compile – nothing was stored', { errors: errs.map((e) => ({ path: `${slug}.mdx`, ...e })) });
+    const errs = [...(await checkMdx(content)), ...checkPolicy(content)];
+    if (errs.length) throw new HttpError(422, 'MDX does not compile or breaks the site rules – nothing was stored', { errors: errs.map((e) => ({ path: `${slug}.mdx`, ...e })) });
   }
 
   const key = `${collection}/${lang}/${slug}`;
@@ -160,8 +161,8 @@ export async function approveSubmission(id, { overwrite = false } = {}) {
   if (sub.status !== 'pending') throw new HttpError(409, `submission is already ${sub.status}`);
   if (sub.existing?.origin === 'dashboard' && !overwrite) throw new HttpError(409, 'a page created in the dashboard already uses this slug; approve with overwrite to replace it', { conflict: true });
   if (sub.ext === 'mdx') {
-    const errs = await checkMdx(sub.content);
-    if (errs.length) throw new HttpError(422, 'MDX no longer compiles', { errors: errs });
+    const errs = [...(await checkMdx(sub.content)), ...checkPolicy(sub.content)];
+    if (errs.length) throw new HttpError(422, 'MDX no longer passes validation', { errors: errs });
   }
   for (const m of sub.media) if (m.missing) throw new HttpError(409, `media ${m.name} is missing on the server; re-send from Obsidian`);
 

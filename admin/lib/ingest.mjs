@@ -32,7 +32,11 @@ export async function checkMdx(source) {
   if (!compile) return [];
   try { await compile(body, { format: 'mdx' }); return []; }
   catch (e) {
-    return [{ line: (e.line ?? e.position?.start?.line ?? 1) + startLine, column: e.column ?? e.position?.start?.column ?? 1, message: String(e.reason || e.message).split('\n')[0] }];
+    const message = String(e.reason || e.message).split('\n')[0];
+    let line = e.line ?? e.position?.start?.line ?? 1, column = e.column ?? e.position?.start?.column ?? 1;
+    const inMsg = /\((\d+):(\d+)(?:-\d+:\d+)?\)/.exec(message); // exact spot of "unclosed tag" errors
+    if (inMsg) { line = Number(inMsg[1]); column = Number(inMsg[2]); }
+    return [{ line: line + startLine, column, message }];
   }
 }
 

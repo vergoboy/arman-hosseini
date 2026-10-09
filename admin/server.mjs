@@ -10,7 +10,7 @@ import { createReadStream } from 'node:fs';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
-import { DATA_DIR, HOST, PORT, PUBLIC_DIR, SCHEMA_TYPES, SITE_URL } from './config.mjs';
+import { CURRENT_LINK, DATA_DIR, HOST, PORT, PUBLIC_DIR, SCHEMA_TYPES, SITE_URL } from './config.mjs';
 import { HttpError, hashPassword, hmac, limiter, rand, safeEqual, verifyPassword } from './lib/util.mjs';
 import * as store from './lib/store.mjs';
 import * as content from './lib/content.mjs';
@@ -105,7 +105,7 @@ async function overview() {
     pending: await subs.pendingCount(),
     counts: { total: real.length, published: published.length, draft: real.filter((e) => e.status === 'draft').length, disabled: real.filter((e) => e.status === 'disabled').length, studio: real.filter((e) => e.origin === 'studio').length },
     seo: { average: avg, issues, worst: published.slice().sort((a, b) => a.health.score - b.health.score).slice(0, 6).map((e) => ({ key: e.key, title: e.title, lang: e.lang, score: e.health.score })) },
-    stats: stats.summary(14), live: await build.currentRelease(),
+    stats: stats.summary(14), live: await build.currentRelease(), liveDir: CURRENT_LINK,
   };
 }
 
@@ -125,7 +125,16 @@ const routes = {
   'GET /api/overview': { run: overview },
   'GET /api/entries': { run: async () => {
     const views = stats.viewsByPath(30);
-    return (await content.listEntries()).map((e) => ({ ...e, bodyPreview: undefined, views: views[e.url] ?? 0 }));
+    const exists = (u) => stat(path.join(CURRENT_LINK, u, 'index.html')).then(() => true, () => false);
+    return Promise.all((await content.listEntries()).map(async (e) => ({ ...e, bodyPreview: undefined, views: views[e.url] ?? 0, live: e.status === 'published' ? await exists(e.url) : null })));
+  } },
+  // Is this page in the live release, and does the public address really serve it?
+  'GET /api/entry/live': { run: async (req, res, q) => {
+    const e = await content.getEntry(q.get('key'));
+    const inRelease = await stat(path.join(CURRENT_LINK, e.url, 'index.html')).then(() => true, () => false);
+    let publicStatus = null, error = null;
+    try { publicStatus = (await fetch(new URL(e.url, SITE_URL), { redirect: 'manual', signal: AbortSignal.timeout(6000), headers: { 'user-agent': 'vergo-admin-check' } })).status; } catch (x) { error = String(x.cause?.code || x.message); }
+    return { url: e.url, status: e.status, release: await build.currentRelease(), inRelease, publicStatus, error, liveDir: CURRENT_LINK };
   } },
   'GET /api/entry': { run: async (req, res, q) => content.getEntry(q.get('key')) },
   'PATCH /api/entry': { run: async (req, res, q, body) => {
