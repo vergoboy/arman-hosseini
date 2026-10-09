@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Journal article "How arman-hosseini.ir works" in English and Persian, covering
+  the Astro build, the SEO/AEO layer, the admin service and atomic releases.
+
 ## [2.0.0] - 2026-10-08
 
 The current release: the site rebuilt as a bilingual Astro content project with
