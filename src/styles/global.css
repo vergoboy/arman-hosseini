@@ -126,3 +126,6 @@ html[lang='fa'] {
   .astro-code, .astro-code span { color: var(--shiki-light); }
   .dark .astro-code, .dark .astro-code span { color: var(--shiki-dark); }
 }
+
+/* MDX built-in components opt out of the article typography */
+.prose-body a.not-prose, .prose-body .not-prose a { color: inherit; text-decoration: none; }

@@ -1,0 +1,11 @@
+---
+// Click-to-open facade: no YouTube script or iframe is loaded with the page (keeps pages light).
+interface Props { id?: string; url?: string; title?: string }
+const { id: idProp, url, title = 'YouTube video' } = Astro.props;
+const id = idProp ?? (url ? /(?:v=|youtu\.be\/|embed\/)([\w-]{11})/.exec(url)?.[1] : undefined);
+if (!id) throw new Error('<YouTube> needs an `id` or a youtube.com / youtu.be `url`');
+---
+<a class="not-prose card group relative my-6 block overflow-hidden !p-0" href={`https://www.youtube.com/watch?v=${id}`} rel="noopener" aria-label={`${title} (YouTube)`}>
+  <img src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt={title} class="aspect-video w-full object-cover" loading="lazy" decoding="async" width="480" height="360" />
+  <span class="absolute inset-0 grid place-items-center"><span class="grid h-14 w-14 place-items-center rounded-full bg-accent text-xl text-[var(--accent-fg)] transition group-hover:scale-110">▶</span></span>
+</a>

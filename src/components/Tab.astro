@@ -1,0 +1,8 @@
+---
+interface Props { label: string; open?: boolean }
+const { label, open = false } = Astro.props;
+---
+<details class="card group !p-0" open={open}>
+  <summary class="cursor-pointer list-none p-3 font-medium">{label}</summary>
+  <div class="border-t border-line p-4"><slot /></div>
+</details>

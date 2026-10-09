@@ -1,0 +1,9 @@
+---
+interface Props { title: string; href?: string }
+const { title, href } = Astro.props;
+const Tag = href ? 'a' : 'div';
+---
+<Tag class:list={['card not-prose my-4 block', href && 'hoverable']} {...(href ? { href } : {})}>
+  <p class="font-semibold">{title}</p>
+  <div class="mt-1 text-sm leading-7 text-muted"><slot /></div>
+</Tag>

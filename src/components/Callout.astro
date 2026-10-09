@@ -1,0 +1,10 @@
+---
+interface Props { type?: 'note' | 'info' | 'tip' | 'warning' | 'danger'; title?: string }
+const { type = 'note', title } = Astro.props;
+const color = { note: 'var(--accent)', info: '#4f9dff', tip: '#3fb950', warning: '#d9a400', danger: '#e5484d' }[type];
+const icon = { note: '✎', info: 'ℹ', tip: '✦', warning: '▲', danger: '✖' }[type];
+---
+<aside class="card not-prose my-6" style={`border-inline-start:4px solid ${color}`} role="note">
+  <p class="font-semibold" style={`color:${color}`}><span aria-hidden="true">{icon}</span> {title ?? type.toUpperCase()}</p>
+  <div class="mt-1 leading-7 text-muted"><slot /></div>
+</aside>

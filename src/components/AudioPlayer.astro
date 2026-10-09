@@ -1,0 +1,8 @@
+---
+interface Props { src: string; title?: string }
+const { src, title } = Astro.props;
+---
+<figure class="not-prose my-6">
+  <audio controls preload="none" src={src} class="w-full" aria-label={title}></audio>
+  {title && <figcaption class="mt-1 text-sm text-muted">{title}</figcaption>}
+</figure>

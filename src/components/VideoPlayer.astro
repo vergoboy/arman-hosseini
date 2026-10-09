@@ -1,0 +1,8 @@
+---
+interface Props { src: string; poster?: string; title?: string }
+const { src, poster, title } = Astro.props;
+---
+<figure class="not-prose my-6">
+  <video controls playsinline preload="metadata" src={src} poster={poster} class="w-full rounded-xl border border-line" aria-label={title}></video>
+  {title && <figcaption class="mt-1 text-sm text-muted">{title}</figcaption>}
+</figure>
