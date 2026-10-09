@@ -7,5 +7,9 @@
   "localDir": "dist",
   "buildCommand": "npm run build",
   "delete": true,
-  "exclude": [".DS_Store", "*.log", "*.map"]
+  "exclude": [
+    ".DS_Store",
+    "*.log",
+    "*.map"
+  ]
 }
