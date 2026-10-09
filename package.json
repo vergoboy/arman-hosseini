@@ -3,6 +3,18 @@
   "type": "module",
   "version": "2.0.0",
   "private": true,
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://arman-hosseini.ir",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vergoboy/arman-hosseini.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vergoboy/arman-hosseini/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro check && astro build",
@@ -28,6 +40,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@types/node": "^22.10.2",
     "typescript": "^5.6.0"
   }
 }
