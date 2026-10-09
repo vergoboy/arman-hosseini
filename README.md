@@ -38,10 +38,17 @@ Dashboard (/admin) ─► content-meta/overrides.json (SEO, status, translations
 - Optional for deploys: SSH access to the target host; `sshpass` only if the
   server does not accept key auth.
 
+## Installation
+
+```bash
+git clone https://github.com/vergoboy/arman-hosseini.git
+cd arman-hosseini
+npm ci
+```
+
 ## Quick start
 
 ```bash
-npm ci
 npm run dev            # site at http://localhost:4321
 npm test               # admin API tests
 ADMIN_PASSWORD='…' npm run admin   # dashboard at http://127.0.0.1:4322/admin/
@@ -63,21 +70,37 @@ Settings.
 | `npm run admin:hash` | Print a password hash for `ADMIN_PASSWORD_HASH`. |
 | `npm run deploy` / `npm run deploy:dry` | Deploy `dist/` via `scripts/deploy.sh`. |
 
+## Development
+
+- `npm run dev` while editing `src/`; content lives in `src/content/`.
+- `npm test` covers the admin API; the deployment tests in `tests/` run with
+  `python3 -m pytest`.
+- Type-check with `npm run build` (which runs `astro check` first). If the
+  check cannot resolve `node:fs`/`node:path`/`process`, make sure `@types/node`
+  is present in `devDependencies`.
+- There is no dedicated linter or formatter configured; the project relies on
+  `astro check` and the existing code style.
+
 ## Configuration
 
 Copy `.env.example` to `.env` (git-ignored) and fill in what you need. Secret
 values never belong in `deploy.config.json` — `scripts/deploy.sh` refuses to run
 if it finds password/passphrase/key fields there.
 
-| Variable | Purpose |
-| --- | --- |
-| `SITE_URL` | Canonical site URL (also used by the admin live check). |
-| `SITE_DIR`, `RELEASES_DIR`, `CURRENT_LINK`, `DATA_DIR` | Deploy/admin paths. |
-| `ADMIN_HOST`, `ADMIN_PORT` | Admin bind address and port. |
-| `ADMIN_PASSWORD_HASH` | scrypt hash from `node admin/server.mjs --hash`. |
-| `BUILD_CMD` | Build command the admin service runs per release. |
-| `DEPLOY_SSH_PASSWORD` | Only if the server cannot use key auth (needs `sshpass`). |
-| `OBSIDIAN_VAULT`, `DEPLOY_CONFIG` | Optional overrides for the sync/deploy scripts. |
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `SITE_URL` | Canonical site URL (also used by the admin live check). | `https://arman-hosseini.ir` |
+| `SITE_DIR` | Site root for the admin service. | directory above `admin/` |
+| `RELEASES_DIR` | Build output for releases. | `<SITE_DIR>/releases` |
+| `CURRENT_LINK` | nginx `root` symlink flipped on a successful build. | `<SITE_DIR>/current` |
+| `DATA_DIR` | Admin data (overrides backup, sessions, stats). | `<SITE_DIR>/.admin-data` |
+| `ADMIN_HOST` | Admin bind address. | `127.0.0.1` |
+| `ADMIN_PORT` | Admin port. | `4322` |
+| `ADMIN_PASSWORD_HASH` | scrypt hash from `node admin/server.mjs --hash`. | — |
+| `BUILD_CMD` | Build command the admin service runs per release. | `npm run build:site` |
+| `KEEP_RELEASES` | Release directories kept before pruning. | `5` |
+| `DEPLOY_SSH_PASSWORD` | Only if the server cannot use key auth (needs `sshpass`). | — |
+| `OBSIDIAN_VAULT`, `DEPLOY_CONFIG` | Optional overrides for the sync/deploy scripts. | — |
 
 ## Architecture
 
@@ -95,6 +118,16 @@ The project has four layers:
   on success.
 
 Main flow: `Obsidian → /api/studio → Inbox → approve → src/content → astro build → releases/<ts> → current`.
+
+### Core components
+
+- **Site** renders pages and feeds from the content collections.
+- **SEO/AEO** (`src/lib/seo.ts`) produces meta tags, Open Graph, JSON-LD,
+  sitemap, RSS, `robots.txt` and `llms.txt`.
+- **Admin service** (`admin/server.mjs`) provides a route table for content,
+  media, submissions, builds and tokens; the browser UI is served at `/admin/`.
+- **Publishing pipeline** moves approved submissions into `src/content` and
+  triggers atomic builds.
 
 ## Project structure
 
@@ -116,6 +149,34 @@ src/
 tests/            Python deployment tests
 ```
 
+## API & CLI
+
+The admin service exposes a small REST API on `ADMIN_HOST:ADMIN_PORT`. Routes
+outside the ones marked **public** require a session cookie and a CSRF header;
+the `/api/studio/*` routes use a revocable bearer token instead.
+
+| Method & path | Purpose |
+| --- | --- |
+| `GET /api/health` (public) | Service health and current release. |
+| `POST /api/login`, `POST /api/logout` (public) | Session login/logout. |
+| `POST /api/v` (public) | Privacy-friendly page-view beacon. |
+| `GET /api/overview`, `GET /api/me` | Dashboard state, user, CSRF token. |
+| `GET /api/entries` · `GET/PATCH/DELETE /api/entry?key=` · `POST /api/entries` | List, read/edit/delete entries. |
+| `PUT /api/entry/body?key=` · `POST /api/entries/bulk` | Body edits, bulk status/SEO patches. |
+| `GET /api/entry/live?key=` | Live-release and public-URL status of a page. |
+| `POST /api/translations/link` / `unlink` | Manage `translationKey` pairs. |
+| `GET /api/media` · `POST /api/media` · `DELETE /api/media?url=` | Media library. |
+| `GET /api/submissions` · `POST /api/submissions/approve\|reject` | Obsidian inbox workflow. |
+| `GET /api/stats?days=` | View statistics. |
+| `POST /api/build` · `GET /api/builds` · `POST /api/rollback` | Build, list, rollback releases. |
+| `GET /api/audit` · `GET /api/backups` · `POST /api/backups/restore` | Audit log and settings backups. |
+| `GET/POST /api/tokens` · `DELETE /api/tokens?id=` | Plugin bearer tokens. |
+| `POST /api/password` | Change the admin password. |
+| `GET /api/studio/ping` · `POST /api/studio/media/check` · `PUT /api/studio/media` · `POST /api/studio/submissions` | Obsidian Studio plugin endpoints (bearer token). |
+
+The **CLI** is the npm script table in [Usage](#usage) plus `node admin/server.mjs --hash`
+for generating an `ADMIN_PASSWORD_HASH`.
+
 ## Content model
 
 `src/content/{projects,journal}/{en,fa}/*.md|mdx`. Frontmatter: `title, date,
@@ -132,12 +193,37 @@ the dashboard) to get hreflang plus the language switcher pointing at the right 
   built-in test runner.
 - `python3 -m pytest` runs the deployment tests in `tests/test_deployment.py`.
 
+## Build & Release
+
+- `npm run build` type-checks and produces `dist/`; `npm run build:site` builds
+  without type-checking (used by the admin release pipeline).
+- Each admin build lands in `releases/<ts>` and is activated by flipping the
+  `current` symlink only on success (see `deploy/`).
+- Versioning follows `package.json` (`version`) and git tags (`v<version>`). The
+  site ships no compiled binaries; release binaries are out of scope for this
+  project.
+
 ## Deploy (Ubuntu + nginx)
 
 `deploy/install.sh` (one-time), `deploy/nginx.conf`, `deploy/arman-admin.service`.
 nginx serves `/opt/arman-hosseini/current`; the admin service runs
 `npm run build:site` into a new release directory and flips the symlink only on
 success (keeping the last 5).
+
+## Troubleshooting
+
+- **`astro check` can't find `node:fs`/`node:path`/`process`** — `@types/node` is
+  missing from `devDependencies`; add it and reinstall.
+- **Admin prints a password at first start** — that is the one-time bootstrap
+  password; set `ADMIN_PASSWORD_HASH` afterwards to stop the prompt.
+- **`deploy.sh` refuses to run** — `deploy.config.json` must not contain keys
+  named `password`, `passphrase`, `privateKey`, `token` or `secret`; move them to
+  `.env`.
+- **`DEPLOY_SSH_PASSWORD` set but deployment fails** — `sshpass` must be on
+  `PATH`, or switch to key auth via `identityFile`.
+- **"Refusing to deploy an empty site"** — `dist/` is empty; build first.
+- **A page is missing from the live site** — pages marked `draft` are skipped by
+  the build unless a dashboard override changes their status.
 
 ## Security
 
