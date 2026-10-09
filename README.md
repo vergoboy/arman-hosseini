@@ -187,6 +187,13 @@ canonical, updated, faq[]`). Anything set in the dashboard wins over frontmatter
 Give the English and Persian version the same `translationKey` (or link them in
 the dashboard) to get hreflang plus the language switcher pointing at the right page.
 
+### MDX components (work in progress)
+
+`src/lib/mdx-components.ts` registers components every MDX page can use without
+importing — `Callout`, `Card`, `Tabs`/`Tab`, `YouTube`, `AudioPlayer`,
+`VideoPlayer`. Explicit imports of `@/components/…` are stripped at build time;
+use the component names directly in the MDX body.
+
 ## Testing
 
 - `npm test` runs the admin API tests (`admin/test/api.test.mjs`) with the Node

@@ -260,7 +260,6 @@ const en = {
         command: '> connect --method discord',
         note: 'Handle only — send a friend request',
         icon: 'discord',
-        href: 'https://discord.com/users/789740807108034610',
       },
       {
         id: 'linkedin',
@@ -545,7 +544,6 @@ const fa: typeof en = {
         command: '> connect --method discord',
         note: 'فقط نام کاربری — درخواست دوستی بفرستید',
         icon: 'discord',
-        href: 'https://discord.com/users/789740807108034610',
       },
       {
         id: 'linkedin',
