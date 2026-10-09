@@ -23,6 +23,15 @@ IDs here map 1:1 to the `{/* MEDIA: <id> */}` markers in
 - Caption: "The built-in Callout, Card and Tabs components rendered on this very page."
 - Verified: OCR of the source PNG finds "Nothing goes live unapproved", "Publishing pipeline" and "Built-in components"; the built `dist/` HTML contains the same components and the image reference.
 
+### 3. screenshot-zerojs-demo
+
+- File: `public/images/docs/zerojs-demo.webp` (PNG source `/tmp/opencode/shot2/zerojs.png` → ImageMagick, quality 82)
+- MDX placement: in `src/content/journal/{en,fa}/zero-js-mdx-components.mdx` after the "How do you write a page with these components?" intro paragraph. Marker: `{/* MEDIA: screenshot-zerojs-demo */}`
+- UI state captured: the live `<Callout type="tip">`, `<Card href>` and `<Tabs>/<Tab>` demos on the article page `/en/journal/zero-js-mdx-components/` (headless Chromium, 1440×8200 full-page).
+- Alt: "The Tabs, Callout and Card components rendered inside an MDX article"
+- Caption: "The built-in Tabs, Callout and Card rendered on this page — with no JavaScript."
+- Verified: OCR of the source PNG finds "Components need no import", "How the site is put together" and "Details"; `identify` reports a valid WEBP; the asset exists in `public/images/docs/`.
+
 ## Recommended (manual, needs authenticated admin)
 
 ### 3. screenshot-admin-inbox — MEDIA ID only when captured
@@ -43,6 +52,17 @@ IDs here map 1:1 to the `{/* MEDIA: <id> */}` markers in
 - Chapters: 1) send from Obsidian, 2) approval in the dashboard, 3) atomic release + live check.
 - Poster: `public/images/docs/admin-inbox.webp`.
 - Placement: after "## How are releases deployed?"
+
+## Optional — sample audio/video for a live demo (not yet captured)
+
+The zero-js-mdx-components article currently shows `AudioPlayer` and `VideoPlayer`
+as verified code examples only (no `public/media/` files exist). To make them live:
+
+1. Add a small, license-clean sample file to `public/media/` (e.g. `recorded-2026.mp3` and a short `clip.mp4` + `clip-poster.jpg`).
+2. Update the "## How can a static site play audio and video?" section to render, e.g., `<AudioPlayer src="/media/recorded-2026.mp3" title="Sample recording" />`.
+3. Re-capture `screenshot-zerojs-demo` with the new elements and re-verify by OCR.
+
+Placeholder marker (for media-plan sync): `{/* MEDIA: sample-audio-video */}` — only insert into the article if/when the files exist.
 
 ## Audit notes
 

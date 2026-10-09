@@ -1,0 +1,153 @@
+---
+title: "Zero-JavaScript MDX components on a static Astro site"
+date: "2026-10-09"
+updated: "2026-10-09"
+lang: "en"
+slug: "zero-js-mdx-components"
+translationKey: "zero-js-mdx-components"
+draft: false
+tags: ["MDX", "Astro", "HTML", "Media"]
+summary: "This site ships six built-in MDX components — Callout, Card, Tabs/Tab, YouTube, AudioPlayer and VideoPlayer — that need zero client JavaScript because they are built on native HTML elements."
+seoTitle: "Zero-JS MDX components: tabs, callouts, audio and video on a static Astro site"
+seoDescription: "How arman-hosseini.ir provides tabs, callouts, YouTube links and audio/video players as zero-JavaScript MDX components — with verified MDX examples and the exact authoring rules the site enforces."
+keywords: ["MDX", "Astro", "static site", "no JavaScript", "details element", "native audio", "video player", "embed YouTube", "content authoring"]
+schemaType: "TechArticle"
+faq:
+  - q: "Do these MDX components need JavaScript enabled to work?"
+    a: "No. Tabs are native details/summary disclosure elements, the callout is a styled aside, YouTube is a plain link with a thumbnail, and audio and video use the browser's native controls. Everything works in the static HTML with JavaScript disabled."
+  - q: "Can I use my own React component inside an article?"
+    a: "Not on this site. The admin service enforces a policy where only the six built-in components may appear in MDX, with no imports, exports or server-side APIs."
+  - q: "Where do audio and video files live?"
+    a: "They live in public/media/ on this site. The AudioPlayer and VideoPlayer components take the site-relative path (for example /media/talk.mp3) as their src prop."
+---
+
+Callout, Card, Tabs/Tab, YouTube, AudioPlayer and VideoPlayer are the six built-in MDX components of arman-hosseini.ir. They render as plain HTML — tabs open and close through the native `details` element, audio and video use the browser's own controls, and a YouTube video becomes a clickable thumbnail — so content never waits on, or breaks without, JavaScript. This article explains how each one is implemented and how to use it in a page.
+
+## Why should MDX components avoid JavaScript?
+
+Because the site is static, every feature must work at build time. Astro compiles each route to HTML, nginx serves that HTML directly, and there is no client framework that could hydrate missing parts if a script fails. Components that rely on native HTML instead of JavaScript keep that promise: the output is smaller, it never blocks on a JavaScript bundle, and it still works in browsers with scripting disabled. The practical rule here is: if a UI piece cannot be built from native HTML, it is not available in content.
+
+## How do tabs work without JavaScript?
+
+Tabs render as native disclosure elements: each `Tab` is a `details` element with a `summary`, and a `Tabs` wrapper only groups them. The first tab can be rendered open with the `open` prop, and users open and close the rest without a single line of script.
+
+```mdx
+<Tabs>
+  <Tab label="Markup" open>
+    Each tab is a details/summary pair.
+  </Tab>
+  <Tab label="Output">
+    Static HTML — no JS to toggle it.
+  </Tab>
+</Tabs>
+```
+
+The `Tab` component takes `label` and an optional boolean `open`; the wrapper `Tabs` takes children only.
+
+## How do you embed a YouTube video on a static site?
+
+The `YouTube` component does not load the YouTube iframe or script at all. It renders a click-to-open card: the video thumbnail (served by `i.ytimg.com` and loaded lazily) inside a link to the watch page. This keeps every page light and leaks no third-party script onto the site. It needs either an `id` or a `url`:
+
+```mdx
+<YouTube id="YOUR_VIDEO_ID" title="Talk title" />
+<!-- or -->
+<YouTube url="https://www.youtube.com/watch?v=EXAMPLE_ID" title="Talk title" />
+```
+
+The `id` is the 11-character part of the watch URL, and the component extracts it from the `url` if only the URL is given.
+
+## How can a static site play audio and video?
+
+With the browser's native media elements, wrapped in a small component. `AudioPlayer` renders an `audio` element with `controls` and `preload="none"`; `VideoPlayer` renders a `video` element with `controls`, `playsinline`, `preload="metadata"` and an optional poster frame. Because `preload` is set to `none`/`metadata`, a page only downloads the media when the reader presses play.
+
+```mdx
+<AudioPlayer src="/media/audio.mp3" title="Audio caption" />
+
+<VideoPlayer src="/media/clip.mp4" poster="/media/clip-poster.jpg" title="Video caption" />
+```
+
+Media files are stored in `public/media/` and referenced with site-relative paths.
+
+## Which MDX components are available without an import?
+
+Six components, registered in `src/lib/mdx-components.ts` and injected into every entry by `EntryPage.astro`:
+
+- `Callout` — a styled callout box (`note`, `info`, `tip`, `warning`, `danger`, plus an optional `title`).
+- `Card` — a card block, optionally an internal link via `href`.
+- `Tabs` / `Tab` — grouped disclosure panels with a `label`, first tab optionally `open`.
+- `YouTube` — a click-to-open thumbnail link to a video (`id` or `url`).
+- `AudioPlayer` — a native audio player (`src`, optional `title`).
+- `VideoPlayer` — a native video player (`src`, `poster`, `title`).
+
+Writing `<Callout>` in the body needs no import. An existing `import { Callout } from "@/components/Callout"` still works: the build drops those imports line-by-line before compiling, so old pages keep rendering.
+
+## What is allowed in MDX on this site?
+
+The admin service validates every Obsidian submission and every dashboard edit against a small policy (`admin/lib/policy.mjs`). A page is rejected with its file, line and column when it breaks a rule:
+
+- only the built-in components may appear — any other uppercase `<Component>` is an error;
+- imports are not allowed — the built-ins need none, and anything else is rejected;
+- `export` statements are not allowed;
+- server-side APIs such as `process`, `require`, `fetch` or dynamic `import()` are not allowed — the page is compiled on the server;
+- text inside fenced code blocks is ignored, so showing an `import` or a raw `<Tag>` in a code example is fine.
+
+This is defence in depth rather than a sandbox: every page still passes through a human approval step before it is built.
+
+## How do you write a page with these components?
+
+1. Add a Markdown/MDX file under `src/content/journal/{en,fa}/` (or project pages under `src/content/projects/`).
+2. Set the frontmatter — `title`, `date`, `lang`, `summary`, `tags` and an optional `draft` flag.
+3. Write the body with the component names directly, exactly as in the examples above.
+4. Preview locally with `npm run dev`, or publish from Obsidian through the studio pipeline and approve it in the dashboard inbox.
+
+The live examples on this page render with the same code:
+
+{/* MEDIA: screenshot-zerojs-demo */}
+
+![The Tabs, Callout and Card components rendered inside an MDX article](/images/docs/zerojs-demo.webp)
+
+<figcaption>The built-in Tabs, Callout and Card rendered on this page — with no JavaScript.</figcaption>
+
+<Callout type="tip" title="Components need no import">
+  A built-in component is just its name. `<Tabs>`, `<Callout>`, `<YouTube>` and friends work inside the body with zero setup.
+</Callout>
+
+<Card title="How the site is put together" href="/en/journal/how-this-site-works">
+  If this article is about the components, the site overview explains the whole pipeline behind them.
+</Card>
+
+<Tabs>
+  <Tab label="Details" open>
+    `details` renders an expandable section natively; assistive technology treats it like any disclosure widget.
+  </Tab>
+  <Tab label="Summary">
+    `<summary>` is the clickable heading of that section.
+  </Tab>
+</Tabs>
+
+## How does this compare to a component framework?
+
+A JavaScript component framework solves a much larger problem — state, routing, updates — which a mostly-static site does not need. Native HTML and a small set of fixed components cover the interactive needs here: disclosure panels, links, native media, and styled boxes. The cost is that truly bespoke interactivity in content is not possible, which is a deliberate trade for pages that render everywhere.
+
+## Frequently Asked Questions
+
+### Do these components work without JavaScript?
+
+Yes. Tabs are native disclosure elements, the callout and card are styled boxes, YouTube is a thumbnail link, and audio/video use the browser's native controls.
+
+### Can I extend the set of components?
+
+Not from content. The list lives in `src/lib/mdx-components.ts` and is enforced by the policy, so new components are added in the site source, not in a page.
+
+### Is a click-to-open YouTube card a real static-site pattern?
+
+It is the standard static approach: the thumbnail comes from YouTube's image service and the link carries the reader to the video, so there is no iframe and no player script on the page.
+
+## References
+
+- [MDX documentation](https://mdxjs.com/docs/using-mdx/) — how JSX expressions work inside Markdown.
+- [Astro MDX integration guide](https://docs.astro.build/en/guides/integrations-guide/mdx/) — rendering MDX through Astro.
+- [MDN: the details element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details) — the native disclosure panel behind Tabs.
+- [MDN: the audio element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio) — the native player behind AudioPlayer.
+- [MDN: the video element](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video) — the native player behind VideoPlayer.
+- [The minimal rendering of this page](/en/journal/how-this-site-works/) — how the whole site is generated.

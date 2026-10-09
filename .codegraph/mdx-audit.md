@@ -1,8 +1,9 @@
-# MDX Audit — how-this-site-works
+# MDX Audit — how-this-site-works + zero-js-mdx-components
 
-Audit date: 2026-10-09. Scope: `src/content/journal/{en,fa}/how-this-site-works.mdx`
-(update pass against the working tree, which includes the built-in MDX components
-and the admin policy validator).
+Audit dates: 2026-10-09. Scope: `src/content/journal/{en,fa}/how-this-site-works.mdx`
+(update pass) and `src/content/journal/{en,fa}/zero-js-mdx-components.mdx` (new standalone
+article published 2026-10-09), against the working tree that includes the built-in MDX
+components and the admin policy validator.
 
 Legend: ERROR = must fix before publish · WARNING = should review · INFO = note.
 
@@ -57,8 +58,38 @@ Legend: ERROR = must fix before publish · WARNING = should review · INFO = not
 - **Testimonials / comparisons**: none.
 - **Roadmap**: no authoritative roadmap file; omitted.
 
+## zero-js-mdx-components — new standalone article (2026-10-09)
+
+New files: `src/content/journal/en/zero-js-mdx-components.mdx` and
+`src/content/journal/fa/zero-js-mdx-components.mdx` (shared `translationKey`,
+slug `zero-js-mdx-components`, URL `/{lang}/journal/zero-js-mdx-components/`).
+Topic: the six built-in zero-JS MDX components (Callout, Card, Tabs/Tab, YouTube,
+AudioPlayer, VideoPlayer) — implementation and authoring rules, grounded in
+`src/lib/mdx-components.ts`, the component sources, `admin/lib/policy.mjs` and
+the `astro.config.mjs` import-strip plugin.
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| New standalone file (not an update) | OK | both files added, untouched pre-existing pages |
+| H1 count (rendered) | OK — 1 | `rg -c "<h1"` on `dist/en/journal/zero-js-mdx-components/index.html` = 1 |
+| Heading hierarchy | OK — 10 H2 per page, no empty H2 | `rg -c "^## "` = 10 en, 10 fa |
+| Question-based H2 | OK — 7 of 10 H2s are real user questions | "How do tabs work without JavaScript?", "How can a static site play audio and video?", etc. |
+| Direct answers | OK | every question H2 opens with a direct answer sentence |
+| Title / description / canonical | OK | `<title>` = seoTitle; canonical `https://arman-hosseini.ir/en/journal/zero-js-mdx-components/` matches the route rule |
+| FAQ (visible + schema) | OK — 3 | rendered visibly; `application/ld+json` present with `acceptedAnswer` |
+| Tags | OK — 4 relevant | MDX, Astro, HTML, Media (fa: رسانه) |
+| Internal links | OK | `<Card href="/en/journal/how-this-site-works">`; target exists in `dist/` (en + fa) |
+| External references | OK — 6 | MDX docs, Astro guide, MDN details/audio/video, plus an internal related-page link; all primary sources |
+| Image identity | OK | alt "The Tabs, Callout and Card components rendered inside an MDX article"; asset `public/images/docs/zerojs-demo.webp` exists and is copied into `dist/images/docs/` |
+| Media markers match plan | OK | `{/* MEDIA: screenshot-zerojs-demo */}` in both pages matches `.codegraph/mdx-media-plan.md` ID |
+| Compiles (admin gate) | OK | `checkPolicy` direct run: en 0 errors, fa 0 errors |
+| Build | OK | `npm run build` exit 0, `astro check` 0 errors; both pages in `dist/` |
+| Tests | OK | `npm test` 9/9 pass |
+| Audit mode | INFO | output is a full article, not a template/placeholder; audio/video shown as code examples (no `public/media/` files exist) — tracked in the media plan as an optional live-demo task |
+
 ## Final verdict
 
-PASS (update pass). All ERROR-level checks pass; the two WARNING-class observations —
-review `updated` freshness policy and consider capturing the authenticated admin
-Inbox screenshot — are tracked in `mdx-media-plan.md`.
+PASS (update + new article). All ERROR-level checks pass for both articles. The
+WARNING-class observations — review `updated` freshness policy, capture an authenticated
+admin Inbox screenshot, and optionally add license-clean sample audio/video for live
+`AudioPlayer`/`VideoPlayer` demos — are tracked in `mdx-media-plan.md`.
