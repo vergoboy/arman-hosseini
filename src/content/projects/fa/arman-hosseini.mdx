@@ -1,0 +1,169 @@
+---
+title: "arman-hosseini.ir"
+date: "2026-10-10"
+updated: "2026-10-10"
+lang: "fa"
+slug: "arman-hosseini"
+translationKey: "arman-hosseini"
+draft: false
+tagline: "سایت ایستای دوزبانه با پنل مدیریت بدون وابستگی"
+summary: "arman-hosseini.ir سایت شخصی دوزبانه (انگلیسی و فارسی راست‌به‌چپ) و ایستایی است که با Astro 7 و Tailwind 4 و بدون هیچ فریم‌ورک سمت کلاینت ساخته شده؛ ترکیبی از یک لایه SEO/AEO و یک سرویس مدیریت Node بدون وابستگی که محتوا را از Obsidian به انتشارهای اتمیک می‌رساند."
+seoTitle: "arman-hosseini.ir — سایت ایستای دوزبانه Astro با پنل مدیریت بدون وابستگی"
+seoDescription: "arman-hosseini.ir چگونه ساخته شده: یک سایت ایستای دوزبانه با Astro 7، لایه SEO/AEO، سرویس مدیریت Node بدون وابستگی و خط لوله انتشار Obsidian به‌صورت انتشارهای اتمیک."
+keywords: ["Astro", "سایت ایستا", "سایت دوزبانه", "SEO", "AEO", "JSON-LD", "پنل مدیریت Node.js", "Obsidian", "انتشار اتمیک", "GPL-3.0"]
+tags: ["Astro", "SEO", "AEO", "Node.js", "سایت ایستا"]
+highlights:
+  - "سایت ایستای دوزبانه (انگلیسی و فارسی راست‌به‌چپ) ساخته‌شده با Astro 7 و Tailwind CSS 4."
+  - "لایه SEO/AEO: فراداده هر صفحه، کارت‌های Open Graph و Twitter و یک گراف JSON-LD."
+  - "سرویس مدیریت Node بدون وابستگی برای Node.js 20 به بالا که هیچ بسته npm نصب نمی‌کند."
+  - "خط لوله انتشار Obsidian: کامپایل و اعتبارسنجی MDX، بررسی SHA-256 رسانه‌ها و انتظار برای تأیید."
+  - "انتشار اتمیک: هر ساخت در releases/<timestamp> قرار می‌گیرد و پیوند نمادین current را تغییر می‌دهد؛ پنج نسخه اخیر نگه داشته می‌شوند."
+links:
+  - { label: "سایت زنده", href: "https://arman-hosseini.ir" }
+  - { label: "کد منبع", href: "https://github.com/vergoboy/arman-hosseini" }
+featured: true
+span: "col"
+schemaType: "SoftwareApplication"
+faq:
+  - q: "arman-hosseini.ir چیست؟"
+    a: "arman-hosseini.ir کارنمای شخصی و یادداشت‌های آرمان حسینی است که به انگلیسی و فارسی (با چیدمان راست‌به‌چپ) منتشر می‌شود. این سایت ایستایی است که با Astro ساخته شده، محتوایش فایل‌محور است و یک سرویس کوچک Node برای ویرایش و انتشار دارد."
+  - q: "arman-hosseini.ir با چه چیزی ساخته شده است؟"
+    a: "با Astro 7 و Tailwind CSS 4، با MDX برای محتوا و بدون فریم‌ورک سمت کلاینت. سرویس مدیریت هم Node.js 20 به بالا و بدون هیچ وابستگی npm است."
+  - q: "آیا arman-hosseini.ir به پایگاه داده یا CMS نیاز دارد؟"
+    a: "نه. محتوا به‌صورت فایل‌های Markdown و MDX زیر src/content/ قرار دارد و ویرایش‌های پنل در یک فایل JSON در content-meta/overrides.json ذخیره می‌شوند. هیچ پایگاه داده‌ای وجود ندارد."
+  - q: "چطور arman-hosseini.ir را محلی اجرا کنم؟"
+    a: "مخزن را clone کنید و سپس `npm ci` و `npm run dev` را اجرا کنید (Node.js 20 یا بالاتر لازم است). دستور `npm run build` هم `astro check` را اجرا می‌کند و سایت ایستا را در dist/ می‌سازد."
+  - q: "آیا arman-hosseini.ir متن‌باز است؟"
+    a: "بله. کد منبع در GitHub در نشانی github.com/vergoboy/arman-hosseini قرار دارد و تحت پروانه GPL-3.0-or-later منتشر شده است (مخزن متن پروانه GNU GPL نسخه ۳ را همراه دارد)."
+  - q: "arman-hosseini.ir چه کاری انجام نمی‌دهد؟"
+    a: "این سایت ایستا و تک‌کاربره است: نه پایگاه داده دارد، نه فریم‌ورک سمت کلاینت، و نه مدل میزبانی چندکاربره. سرویس مدیریت برای یک نویسنده با یک گذرواژه و یک پوشه داده محلی ساخته شده است."
+---
+
+arman-hosseini.ir سایت شخصی آرمان حسینی است: یک کارنما و یادداشت‌نامه ایستا و دوزبانه که با Astro ساخته شده و یک لایه SEO/AEO، یک سرویس مدیریت Node بدون وابستگی و یک خط لوله انتشار Obsidian دارد که یادداشت‌های Markdown و MDX را به انتشارهای اتمیک تبدیل می‌کند.
+
+## arman-hosseini.ir چه مشکلی را حل می‌کند؟
+
+این پروژه نوشته‌های فنی و یادداشت‌های پروژه‌ها را به دو زبان و بدون پایگاه داده، CMS یا فریم‌ورک سمت کلاینت منتشر می‌کند. سکوهای پویا برای محتوایی که بیشتر متن است، سرور، وابستگی و سربار زمان اجرا اضافه می‌کنند؛ این پروژه در عوض HTML پیش‌ساخته ارائه می‌دهد، محتوا را به‌صورت فایل زیر کنترل نسخه نگه می‌دارد و فقط یک سرویس کوچک برای ویرایش، اعتبارسنجی و انتشار اضافه می‌کند.
+
+<Callout type="note" title="دامنه کار">
+  arman-hosseini.ir سایتی تک‌نویسنده است. سرویس مدیریت و افزونه Obsidian بخشی از همین پروژه‌اند؛ خودِ سایت عمومی HTML ایستای خالص است.
+</Callout>
+
+## arman-hosseini.ir چگونه کار می‌کند؟
+
+Astro در زمان ساخت همه مسیرها را به HTML ایستا کامپایل می‌کند. یک سرویس جداگانه Node بدون وابستگی (`admin/`) محتوا را مدیریت و انتشارهای تازه می‌سازد، و nginx نسخه جاری را از طریق یک پیوند نمادین ارائه می‌دهد که تنها بعد از یک ساخت موفق جابه‌جا می‌شود.
+
+پروژه در چهار لایه سازمان یافته است:
+
+1. **نمایش** — مسیرهای Astro در `src/pages/` صفحات خانه، درباره، پروژه‌ها، یادداشت‌ها، برچسب‌ها و تماس را می‌سازند، به‌همراه `404`، `sitemap.xml`، `robots.txt`، `llms.txt`، فید RSS هر زبان و web manifest.
+2. **محتوا** — فایل‌های Markdown و MDX زیر `src/content/{projects,journal}/{en,fa}` که با طرح‌واره `src/content.config.ts` اعتبارسنجی می‌شوند.
+3. **SEO/AEO** — `src/lib/seo.ts` هر ورودی را به فراداده صفحه، کارت Open Graph/Twitter و یک گراف JSON-LD تبدیل می‌کند.
+4. **مدیریت و انتشار** — سرویس Node در `admin/` محتوا را ویرایش و انتشارها را می‌سازد، و `deploy/` آن‌ها را از طریق nginx ارائه می‌دهد.
+
+{/* MEDIA: screenshot-arman-home */}
+![صفحه اصلی انگلیسی arman-hosseini.ir که توسط Astro ساخته شده است](/images/arman-hosseini/home.webp)
+
+<figcaption>صفحه اصلی عمومی: HTML ایستایی که یک‌بار در زمان انتشار ساخته می‌شود، بدون فریم‌ورک سمت کلاینت.</figcaption>
+
+مسیر انتشار چنین است:
+
+```text
+Obsidian ─Vergo MDX Studio─► /api/studio ─► Inbox ─(approve)─► src/content ─► astro build ─► releases/<ts> ─► current (symlink)
+Dashboard (/admin) ─► content-meta/overrides.json ─► same build
+```
+
+## با arman-hosseini.ir چه کارهایی می‌توان کرد؟
+
+| قابلیت | چه می‌کند | کجا قرار دارد |
+| --- | --- | --- |
+| صفحات دوزبانه | انگلیسی و فارسی با چیدمان RTL و hreflang، وقتی یک جفت `translationKey` مشترک داشته باشد | `src/content/`، `src/lib/content.ts` |
+| فراداده SEO/AEO | عنوان، توضیح، کلیدواژه، canonical، Open Graph، کارت‌های Twitter و JSON-LD برای هر صفحه | `src/lib/seo.ts` |
+| خروجی‌های خوانا برای ماشین | `sitemap.xml` (با hreflang و `lastmod`)، `robots.txt`، `llms.txt`، RSS و web manifest | `src/pages/` |
+| کامپوننت‌های داخلی MDX | `Callout`، `Card`، `Tabs`/`Tab`، `YouTube`، `AudioPlayer`، `VideoPlayer` — بدون نیاز به import | `src/lib/mdx-components.ts` |
+| پنل مدیریت | ویرایش SEO، رسانه، ترجمه‌ها، وضعیت پیش‌نویس/غیرفعال، آمار و بازگردانی | `admin/` |
+| انتشار از Obsidian | نوشتن MDX در Obsidian، کامپایل و ارسال، سپس تأیید در پنل | `../vergo-mdx-studio` |
+| انتشار اتمیک | هر ساخت در `releases/<timestamp>` می‌نشیند؛ پیوند `current` فقط در صورت موفقیت جابه‌جا می‌شود | `admin/lib/build.mjs` |
+
+<Tabs>
+  <Tab label="نویسندگی محتوا" open>
+
+محتوا Markdown یا MDX با فراداده‌ای است که با `src/content.config.ts` اعتبارسنجی می‌شود. فایل‌ها توسط نقطه پایانی دریافت سرویس مدیریت یا از طریق پنل نوشته می‌شوند؛ بازنویسی‌های SEO و وضعیت جداگانه در `content-meta/overrides.json` ذخیره می‌شوند تا انتشار دوباره هرگز ویرایش پنل را پاک نکند.
+
+  </Tab>
+  <Tab label="اعتبارسنجی">
+
+هر ارسال از Obsidian و هر ویرایش پنل با `admin/lib/policy.mjs` بررسی می‌شود: فقط کامپوننت‌های داخلی، بدون import یا `export` و بدون APIهای سمت سرور (`process`، `require`، `fetch` و…). بلوک‌های کد داخل fence از این قواعد مستثنا هستند.
+
+  </Tab>
+  <Tab label="انتشار">
+
+`admin/lib/build.mjs` ساخت را در یک پوشه تازه اجرا می‌کند، وجود `index.html` را بررسی می‌کند، سپس آن را به `releases/<timestamp>` منتقل و پیوند `current` را به‌صورت اتمیک جایگزین می‌کند. یک ساخت ناموفق هرگز به سایت زنده دست نمی‌زند.
+
+  </Tab>
+</Tabs>
+
+## چطور arman-hosseini.ir را نصب و اجرا کنم؟
+
+پیش‌نیازها: Node.js 20 یا بالاتر (از بخش `engines` در `package.json`) و npm. زمان اجرای دیگری لازم نیست؛ سرویس مدیریت فقط از کتابخانه استاندارد Node استفاده می‌کند.
+
+```bash
+git clone https://github.com/vergoboy/arman-hosseini.git
+cd arman-hosseini
+npm ci
+npm run dev        # سرور توسعه محلی
+npm run build      # astro check && astro build → dist/
+npm test           # تست‌های API پنل (node --test admin/test/*.test.mjs)
+```
+
+دستورهای معتبر `package.json` این‌ها هستند:
+
+| Script | دستور | کاربرد |
+| --- | --- | --- |
+| `npm run dev` | `astro dev` | سرور توسعه محلی |
+| `npm run build` | `astro check && astro build` | بررسی نوع و ساخت در `dist/` |
+| `npm run preview` | `astro preview` | پیش‌نمایش خروجی ساخته‌شده |
+| `npm test` | `node --test admin/test/*.test.mjs` | تست‌های API پنل |
+| `npm run admin` | `node admin/server.mjs` | اجرای سرویس مدیریت (پیش‌فرض `127.0.0.1:4322`) |
+| `npm run deploy` | `bash scripts/deploy.sh` | ساخت و همگام‌سازی `dist/` با سرور به‌صورت نسخه تازه |
+
+## چطور arman-hosseini.ir را پیکربندی کنم؟
+
+سرویس مدیریت و فرایند ساخت مجموعه کوچکی از متغیرهای محیطی را می‌خوانند. فقط نام‌ها — هرگز رمز یا کلید را در مخزن نگه ندارید.
+
+| متغیر | کاربرد | پیش‌فرض |
+| --- | --- | --- |
+| `SITE_DIR` | ریشه سورس سایت | ریشه پروژه |
+| `DATA_DIR` | پوشه داده پنل (نشست‌ها، ساخت‌ها، صندوق ورودی) | `./.admin-data` |
+| `RELEASES_DIR` | محل نگهداری نسخه‌های ساخته‌شده | `./releases` |
+| `CURRENT_LINK` | پیوند نمادینی که nginx ارائه می‌دهد | `./current` |
+| `ADMIN_HOST` | نشانی اتصال پنل | `127.0.0.1` |
+| `ADMIN_PORT` | درگاه پنل | `4322` |
+| `BUILD_CMD` | دستوری که پنل برای ساخت اجرا می‌کند | `npm run build:site` |
+| `KEEP_RELEASES` | تعداد نسخه‌های نگه‌داشته‌شده | `5` |
+| `SITE_URL` | نشانی canonical سایت | `https://arman-hosseini.ir` |
+
+تنظیمات انتشار که رمز نیستند در `deploy.config.json` قرار دارند (host، port، user، `remotePath`، `identityFile`، `localDir`، `buildCommand`، `exclude`). هر نوع اعتبارنامه باید در `.env` (نادیده‌گرفته‌شده در git) بماند؛ `scripts/deploy.sh` اگر `deploy.config.json` فیلدی مانند password، passphrase، privateKey، token یا secret داشته باشد، از اجرا سر باز می‌زند.
+
+## arman-hosseini.ir در مقایسه با یک CMS مانند WordPress چگونه است؟
+
+هر دو می‌توانند متن را در دسته‌بندی‌های متعدد منتشر کنند. تفاوت در سربار عملیاتی در برابر راحتی ویرایش است.
+
+| جنبه | arman-hosseini.ir | WordPress |
+| --- | --- | --- |
+| زمان اجرا | فایل‌های ایستا که nginx ارائه می‌دهد | PHP + پایگاه داده |
+| وابستگی‌ها | Node.js فقط در زمان ساخت؛ پنل بدون بسته npm | افزونه‌ها و پایگاه داده‌ای که باید نگه‌داری شوند |
+| ویرایش | فایل‌های Markdown/MDX، پنل، یا Obsidian | رابط مدیریت مرورگری |
+| کارایی | HTML پیش‌ساخته؛ بدون رندر برای هر درخواست | رندر برای هر درخواست (نیازمند کش) |
+| تعامل | هیچ‌کدام در محتوا (سایت ایستا) | افزونه‌ها و پوسته‌ها |
+| مناسب برای | یک نویسنده، متن‌محور، سریع و کم‌نگه‌داری | بسیاری ویرایشگر، بوم افزونه، امکانات پویا |
+
+سایت ایستا اگر به حساب کاربری، دیدگاه یا محتوای متغیر با هر درخواست بدون ساخت دوباره نیاز دارید، انتخاب نادرستی است. arman-hosseini.ir عمداً هیچ‌کدام از این‌ها را ندارد.
+
+## چه کسی arman-hosseini.ir را نگه‌داری می‌کند و چطور می‌توانم مشارکت کنم؟
+
+این پروژه را آرمان حسینی نوشته و نگه‌داری می‌کند. پروانه آن **GPL-3.0-or-later** است (پروانه عمومی همگانی گنو نسخه ۳). سورس و پیگیری مسائل در GitHub است:
+
+- سورس: [github.com/vergoboy/arman-hosseini](https://github.com/vergoboy/arman-hosseini) (آینه در [Codeberg](https://codeberg.org/vergoboy/arman-hosseini))
+- مسائل: [github.com/vergoboy/arman-hosseini/issues](https://github.com/vergoboy/arman-hosseini/issues)
+
+چون پروژه تحت GPL است، مشارکت‌ها با همان شرایط پذیرفته می‌شوند. نکات امنیتی و سیاست رمزها در README مخزن مستند شده است.
