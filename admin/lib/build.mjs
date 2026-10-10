@@ -1,11 +1,14 @@
 import { spawn } from 'node:child_process';
-import { appendFile, mkdir, readdir, readFile, readlink, rename, rm, stat, symlink } from 'node:fs/promises';
+import { appendFile, cp, mkdir, readdir, readFile, readlink, rename, rm, stat, symlink } from 'node:fs/promises';
 import path from 'node:path';
 import { BUILD_CMD, CURRENT_LINK, DATA_DIR, KEEP_RELEASES, RELEASES_DIR, SITE_DIR } from '../config.mjs';
 import { audit, clearDirty } from './store.mjs';
 import { HttpError, readJson, writeJson } from './util.mjs';
 
 const logDir = path.join(DATA_DIR, 'builds');
+/** Builds run inside the source tree: Astro moves files from <site>/.astro into the output dir with
+ *  rename(), which fails with EXDEV when the output lives on another filesystem. */
+const STAGE_DIR = path.join(SITE_DIR, '.build');
 const metaFile = path.join(DATA_DIR, 'builds.json');
 let running = null;
 let pending = false;
@@ -35,7 +38,9 @@ const stamp = () => new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14).
 export async function startBuild(reason = 'manual') {
   if (running) { pending = true; return { id: running.id, queued: true }; }
   const id = stamp();
-  const out = path.join(RELEASES_DIR, id);
+  const out = path.join(STAGE_DIR, id);
+  const dest = path.join(RELEASES_DIR, id);
+  await rm(STAGE_DIR, { recursive: true, force: true }); // leftovers of crashed builds
   await mkdir(logDir, { recursive: true }); await mkdir(RELEASES_DIR, { recursive: true });
   const startedAt = Date.now();
   running = { id, startedAt };
@@ -43,27 +48,33 @@ export async function startBuild(reason = 'manual') {
   const list = await loadMeta(); list.unshift(meta); await saveMeta(list);
   const logFile = path.join(logDir, `${id}.log`);
   const log = (s) => appendFile(logFile, s).catch(() => {});
-  await log(`$ ${BUILD_CMD}   (ASTRO_OUT_DIR=${out})\n`);
+  await log(`$ ${BUILD_CMD}   (ASTRO_OUT_DIR=${out} → ${dest})\n`);
 
   const child = spawn('sh', ['-c', BUILD_CMD], { cwd: SITE_DIR, env: { ...process.env, ASTRO_OUT_DIR: out, NODE_ENV: 'production' } });
   const timer = setTimeout(() => child.kill('SIGKILL'), 15 * 60_000);
   child.stdout.on('data', (d) => log(d)); child.stderr.on('data', (d) => log(d));
-  child.on('error', (e) => log(`spawn error: ${e.message}\n`));
-  child.on('close', async (code) => {
+  let spawnError = null;
+  child.on('error', (e) => { spawnError = e.message; log(`spawn error: ${e.message}\n`); });
+  child.on('close', async (code, signal) => {
     clearTimeout(timer);
     try {
       const ok = code === 0 && (await stat(path.join(out, 'index.html')).catch(() => null));
       meta.endedAt = Date.now();
       if (ok) {
+        await moveToReleases(out, dest);
         await switchTo(id);
-        meta.status = 'success'; meta.pages = await countPages(out);
+        meta.status = 'success'; meta.pages = await countPages(dest);
         await clearDirty(startedAt); await prune();
         await log(`\n✔ released ${id} (${meta.pages} pages)\n`);
       } else {
-        meta.status = 'failed'; meta.error = code === 0 ? 'no index.html produced' : `exit code ${code}`;
+        meta.status = 'failed';
+        meta.error = spawnError ? `could not start the build: ${spawnError}` : signal ? `killed by ${signal}${signal === 'SIGKILL' ? ' (out of memory or the 15-minute limit?)' : ''}` : code === 0 ? 'build finished but produced no index.html' : `exit code ${code}`;
         await rm(out, { recursive: true, force: true });
+        const printed = (await readFile(logFile, 'utf8').catch(() => '')).split('\n').length > 3;
+        if (!printed) await log('\n(the build command printed nothing — check `journalctl -u arman-admin -n 50` and that `npm run build:site` works in the site folder)\n');
         await log(`\n✖ build failed: ${meta.error}. The live site was not touched.\n`);
       }
+      if (meta.status === 'failed') meta.tail = (await readFile(logFile, 'utf8').catch(() => '')).trim().split('\n').slice(-25).join('\n').slice(-3000);
       await audit('system', 'build', id, meta.status);
     } finally {
       const all = await loadMeta(); const i = all.findIndex((b) => b.id === id); if (i >= 0) all[i] = meta; await saveMeta(all);
@@ -72,6 +83,16 @@ export async function startBuild(reason = 'manual') {
     }
   });
   return { id, queued: false };
+}
+
+/** rename() when possible (same filesystem); otherwise copy next to the target and rename there. */
+export async function moveToReleases(from, dest) {
+  try { await rename(from, dest); return; } catch (e) { if (e.code !== 'EXDEV') throw e; }
+  const tmp = `${dest}.partial`;
+  await rm(tmp, { recursive: true, force: true });
+  await cp(from, tmp, { recursive: true });
+  await rename(tmp, dest);
+  await rm(from, { recursive: true, force: true });
 }
 
 async function countPages(dir) {

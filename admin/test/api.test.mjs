@@ -160,3 +160,4 @@ test('live check: published pages are flagged until a build contains them', asyn
   const r = (await call('GET', '/api/entry/live?key=journal%2Fen%2Flive-probe')).json;
   assert.equal(r.inRelease, false); assert.equal(r.status, 'published'); assert.ok(r.liveDir);
 });
+
