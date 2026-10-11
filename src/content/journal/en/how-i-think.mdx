@@ -1,0 +1,46 @@
+---
+title: "How I Think About Building Software: Understand First"
+date: "2026-10-11"
+updated: "2026-10-11"
+lang: "en"
+slug: "how-i-think"
+translationKey: "how-i-think"
+draft: false
+tags: ["Rust", "Linux", "Reverse engineering", "Open source"]
+summary: "I build software by finding the layer below the problem first: the protocol, the operating system or the hardware. Rust, Linux and open source follow from that habit, not the other way round."
+seoTitle: "How I Think About Building Software: Understand First"
+seoDescription: "My engineering principles, shown through real work: reverse engineering an Intel Arc RGB controller, Rust instead of Electron, and fewer dependencies."
+keywords: ["how I build software", "software engineering principles", "Rust native software", "reverse engineering hardware", "Linux and networking"]
+schemaType: "BlogPosting"
+faq:
+  - q: "Do you always choose Rust?"
+    a: "No. Rust is my default for network and systems code where memory use and latency matter. For a small script, Bash or Python is the better tool, and for a client interface I used Flutter."
+  - q: "Where can I see this approach in real work?"
+    a: "Start with two projects: the Arc B580 RGB controller and Vegord, a Rust network tool. Their project pages describe what each one actually does."
+  - q: "Is everything you build finished?"
+    a: "No. Some projects are in active development and some are experiments. Each project page says which it is, and what it actually does."
+---
+
+Most of my projects begin with a small irritation: a tool that hides what it is doing, a limit someone calls permanent, a vendor feature with no documentation. These notes explain what I do next, using work I have actually shipped.
+
+{/* MEDIA 1: a real photo of the working desk or the terminal during the Arc B580 I²C probing. Save as public/images/how-i-think/workbench.webp (1200×630). Alt: "Terminal output from I²C bus scanning on an Intel Arc B580 graphics card." Place it here, directly under the opening paragraph. */}
+
+## Why do I look at the layer below the problem?
+
+Because the visible symptom is rarely where the cause is. The ASRock Intel Arc B580 shipped with no open-source RGB control. Fixing that meant tracing the I²C and SMBus path, probing PCI device registers, and reading the firmware on the Nuvoton microcontroller until the control protocol was clear. The result was packets verified on real hardware and sent upstream to OpenRGB. It is summarised under [featured projects](/en/) on the home page.
+
+## When is a native binary worth it?
+
+When the cost of the runtime is part of the problem. Vegord is a network tool, so memory use and added latency are what the user feels. Moving the hot path from an Electron-style client into a Rust binary reduces both, while TLS fragmentation, DNS-over-HTTPS and ISP-aware routing stay available. Its current feature list is under [Vegord in the featured projects](/en/).
+
+## How do I decide what not to add?
+
+I ask what the thing costs later. A framework, a package or a service has to be updated, secured and understood by whoever maintains it next. This site follows the same rule: it ships static HTML, and its admin service uses only the Node.js standard library. [How this site works](/en/journal/how-this-site-works/) explains the trade-offs, including what that choice rules out.
+
+## Why does open source matter to this approach?
+
+Open source lets me inspect a problem instead of accepting a black box as the answer. It also lets me give something back: the Arc B580 findings went to OpenRGB, not into a private notebook. My public code is on [GitHub](https://github.com/vergoboy).
+
+## What does this mean when you work with me?
+
+Expect me to ask what the actual problem is before proposing a tool, and to tell you plainly when a simpler answer exists. If you want to talk about a project, the [contact page](/en/contact/) lists the direct channels, and [about](/en/about/) has the short version of what I work on.

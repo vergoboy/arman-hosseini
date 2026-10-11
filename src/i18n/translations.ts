@@ -36,9 +36,16 @@ export interface TimelineEntry {
   body: string;
 }
 
-export interface TechGroup {
-  group: string;
-  items: string[];
+export interface AboutSection {
+  title: string;
+  body: string[];
+}
+
+export interface ExploreItem {
+  label: string;
+  /** Route relative to the language root, e.g. `projects` or `journal/how-i-think`. */
+  href: string;
+  body: string;
 }
 
 export interface ContactMethod {
@@ -180,47 +187,39 @@ const en = {
     ] as ProjectCopy[],
   },
   about: {
-    title: 'About',
+    title: 'About Arman Hosseini',
     command: 'cat ~/about.md',
     intro:
-      'I work on the layers most people skip: native binaries, network protocols and the hardware underneath the abstraction. Here is the short version of how I got here.',
-    timelineTitle: 'Terminal history',
-    timeline: [
+      "I'm Arman Hosseini, a software engineer who works close to the system: native Rust software, network tooling, Linux, and reverse engineering hardware that has no documentation.",
+    sections: [
       {
-        period: 'Early days',
-        title: 'First lines of code',
-        body: 'Started with scripting and small utilities, learning how software really works by breaking it apart and rebuilding it.',
+        title: 'What do I work on?',
+        body: [
+          'Network tools come first. Vegord is a native Rust system for TLS fragmentation, DNS-over-HTTPS and ISP-aware routing. BidandoonVPN is a Flutter client with an Xray and VLESS backend behind it.',
+          'Then hardware: I reverse-engineered the I²C RGB controller on an ASRock Intel Arc B580 and sent the results to OpenRGB. And local AI: Arman Music uses local language models to build playlists from plain-language requests.',
+        ],
       },
       {
-        period: 'Systems programming',
-        title: 'Down to the metal',
-        body: 'Moved into C and Linux internals — processes, memory, the kernel, and everything sitting below the abstraction line.',
+        title: 'How do I work?',
+        body: [
+          'I start from the layer below the problem, choose native software when the runtime is part of the cost, and avoid dependencies I cannot justify. The longer version, with examples, is in How I Think.',
+        ],
       },
       {
-        period: 'Rust & performance',
-        title: 'Native by default',
-        body: 'Adopted Rust for network and systems work, replacing heavy runtimes with fast, memory-safe native binaries.',
+        title: 'What is this site for?',
+        body: [
+          'It records what I build and what I learn: project pages that say what each project actually does, and journal notes written after the work. Not every project is finished, and each page says which ones are not.',
+          'My name in Persian is آرمان حسینی, and the site is published in English and Persian.',
+        ],
       },
-      {
-        period: 'Network engineering',
-        title: 'Traffic, protocols, packets',
-        body: 'Deep work on Xray, VLESS, TLS fragmentation and smart routing — with device-level reverse engineering on the side.',
-      },
-    ] as TimelineEntry[],
-    stackTitle: 'Tech stack',
-    stack: [
-      { group: 'Languages', items: ['Rust', 'C', 'TypeScript', 'Dart', 'Python', 'Bash'] },
-      {
-        group: 'Systems',
-        items: ['Linux', 'Kernel internals', 'I²C / SMBus', 'Ethernet', 'Reverse Engineering'],
-      },
-      {
-        group: 'Networking',
-        items: ['Xray', 'VLESS', 'gRPC', 'TLS Fragmentation', 'DoH', 'Smart Routing'],
-      },
-      { group: 'Apps & AI', items: ['Flutter', 'Astro', 'Tailwind CSS', 'Local LLMs', 'RAG'] },
-      { group: 'Tooling', items: ['Git', 'OpenRGB', '3x-ui', 'Telegram Mini Apps'] },
-    ] as TechGroup[],
+    ] as AboutSection[],
+    exploreTitle: 'Explore the work',
+    explore: [
+      { label: 'Projects', href: 'projects', body: 'Software and hardware work, with what each one does.' },
+      { label: 'How I Think', href: 'journal/how-i-think', body: 'The principles behind the work, with real examples.' },
+      { label: 'Journal', href: 'journal', body: 'Notes written after the work is done.' },
+      { label: 'Contact', href: 'contact', body: 'Direct channels. English and Persian both work.' },
+    ] as ExploreItem[],
     currentlyTitle: 'Currently',
     currently: [
       'Building Vegord, a native Rust networking system.',
@@ -228,6 +227,7 @@ const en = {
       'Documenting hardware reverse-engineering work in the open.',
     ] as string[],
   },
+
   contact: {
     title: 'Contact',
     command: 'ls ./contact-methods/',
@@ -323,9 +323,9 @@ const en = {
         'Arman Hosseini is a software engineer building high-performance native systems in Rust, optimizing network traffic, and reverse-engineering hardware.',
     },
     about: {
-      title: 'About Arman Hosseini — Rust, Systems Programming & Networks',
+      title: 'About Arman Hosseini | Rust, Linux & Network Engineer',
       description:
-        'The path from first lines of code to systems programming in C and Rust, and deep network engineering with Xray, VLESS and traffic optimization.',
+        'Arman Hosseini is a software engineer building native Rust software, network tools and hardware reverse-engineering projects. See what he works on and how.',
     },
     projects: {
       title: 'Projects | Arman Hosseini',
@@ -461,57 +461,47 @@ const fa: typeof en = {
     ],
   },
   about: {
-    title: 'درباره',
+    title: 'درباره آرمان حسینی',
     command: 'cat ~/about.md',
     intro:
-      'روی لایههایی کار می‌کنم که بیشتر افراد از آن‌ها عبور می‌کنند: باینری‌های بومی، پروتکل‌های شبکه و سخت‌افزاری که زیر لایه انتزاع قرار دارد. این روایت کوتاه مسیر من است.',
-    timelineTitle: 'تاریخچه ترمینال',
-    timeline: [
+      'من آرمان حسینی هستم، مهندس نرم‌افزاری که نزدیک سیستم کار می‌کنم: نرم‌افزار بومی با Rust، ابزار شبکه، لینوکس و مهندسی معکوس سخت‌افزارهایی که مستند ندارند.',
+    sections: [
       {
-        period: 'روز‌های اول',
-        title: 'اولین خطوط کد',
-        body: 'با اسکریپتنویسی و ابزار‌های کوچک شروع کردم؛ نرم‌افزار را با بازکردن و از نو ساختنش یاد گرفتم.',
+        title: 'روی چه کارهایی کار می‌کنم؟',
+        body: [
+          'اول ابزارهای شبکه. Vegord یک سیستم بومی با Rust برای تکه‌تکه‌سازی TLS، DNS روی HTTPS و مسیریابی آگاه از ISP است. BidandoonVPN یک کلاینت Flutter است که پشتش بکاند Xray و VLESS قرار دارد.',
+          'بعد سخت‌افزار: کنترلر RGB روی I²C کارت ASRock Intel Arc B580 را مهندسی معکوس کردم و نتیجه را به OpenRGB فرستادم. و هوش مصنوعی محلی: Arman Music با مدل‌های زبانی محلی از روی درخواست‌های ساده‌ی فارسی یا انگلیسی پلی‌لیست می‌سازد.',
+        ],
       },
       {
-        period: 'برنامهنویسی سیستمی',
-        title: 'تا نزدیک سخت‌افزار',
-        body: 'به C و درونیات لینوکس رفتم — فرایند‌ها، حافظه، کرنل و هر چیزی که زیر لایه انتزاع قرار دارد.',
+        title: 'چطور کار می‌کنم؟',
+        body: [
+          'از لایه‌ی زیر مسئله شروع می‌کنم، وقتی هزینه‌ی محیط اجرا بخشی از مسئله است نرم‌افزار بومی انتخاب می‌کنم و وابستگی‌ای که نتوانم توجیه کنم اضافه نمی‌کنم. نسخه‌ی کامل‌تر، با مثال، در «طرز فکر من» است.',
+        ],
       },
       {
-        period: 'Rust و کارایی',
-        title: 'بومی به‌صورت پیش‌فرض',
-        body: 'Rust را برای کار‌های شبکه و سیستمی انتخاب کردم؛ محیط‌های اجرایی سنگین جای خود را به باینری‌های بومی، سریع و امن دادند.',
-      },
-      {
-        period: 'مهندسی شبکه',
-        title: 'ترافیک، پروتکل‌ها، بسته‌ها',
-        body: 'کار عمیق روی Xray، VLESS، تکه‌تکه‌سازی TLS و مسیریابی هوشمند، به‌همراه مهندسی معکوس سخت‌افزار.',
+        title: 'این سایت برای چیست؟',
+        body: [
+          'اینجا ثبت می‌کنم چه می‌سازم و چه یاد می‌گیرم: صفحه‌های پروژه که می‌گویند هر پروژه دقیقاً چه کاری می‌کند، و یادداشت‌هایی که بعد از تمام شدن کار می‌نویسم. همه‌ی پروژه‌ها تمام‌شده نیستند و هر صفحه می‌گوید کدام‌ها نیستند.',
+          'نامم آرمان حسینی است (در انگلیسی Arman Hosseini). گاهی به‌صورت «ارمان حسینی» هم نوشته می‌شود؛ منظور همین یک نفر است. سایت به فارسی و انگلیسی منتشر می‌شود.',
+        ],
       },
     ],
-    stackTitle: 'پشته فناوری',
-    stack: [
-      { group: 'زبان‌ها', items: ['Rust', 'C', 'TypeScript', 'Dart', 'Python', 'Bash'] },
-      {
-        group: 'سیستم و سخت‌افزار',
-        items: ['لینوکس', 'درونیات کرنل', 'I²C / SMBus', 'اترنت', 'مهندسی معکوس'],
-      },
-      {
-        group: 'شبکه',
-        items: ['Xray', 'VLESS', 'gRPC', 'تکه‌تکه‌سازی TLS', 'DoH', 'مسیریابی هوشمند'],
-      },
-      {
-        group: 'برنامه و هوش مصنوعی',
-        items: ['Flutter', 'Astro', 'Tailwind CSS', 'مدل‌های زبانی محلی', 'RAG'],
-      },
-      { group: 'ابزار‌ها', items: ['Git', 'OpenRGB', '3x-ui', 'مینی‌اپ تلگرام'] },
+    exploreTitle: 'کارها را ببینید',
+    explore: [
+      { label: 'پروژه‌ها', href: 'projects', body: 'کارهای نرم‌افزاری و سخت‌افزاری، با توضیح اینکه هرکدام چه می‌کنند.' },
+      { label: 'طرز فکر من', href: 'journal/how-i-think', body: 'اصولی که پشت کارهایم است، با مثال‌های واقعی.' },
+      { label: 'یادداشت‌ها', href: 'journal', body: 'یادداشت‌هایی که بعد از تمام شدن کار می‌نویسم.' },
+      { label: 'تماس', href: 'contact', body: 'راه‌های مستقیم. فارسی و انگلیسی هر دو جواب می‌دهد.' },
     ],
     currentlyTitle: 'در حال حاضر',
     currently: [
-      'در حال ساخت Vegord، یک سیستم شبکهسازی بومی با Rust.',
+      'در حال ساخت Vegord، یک سیستم شبکه‌سازی بومی با Rust.',
       'پشتیبانی و توسعه BidandoonVPN در کلاینت و بکاند.',
       'مستندسازی متن‌باز پروژه‌های مهندسی معکوس سخت‌افزار.',
     ],
   },
+
   contact: {
     title: 'تماس',
     command: 'ls ./contact-methods/',
@@ -606,9 +596,9 @@ const fa: typeof en = {
         'آرمان حسینی، مهندس نرم‌افزار؛ ساخت سیستم‌های بومی پرسرعت با Rust، بهینه‌سازی ترافیک شبکه و مهندسی معکوس سخت‌افزار.',
     },
     about: {
-      title: 'درباره آرمان حسینی — برنامهنویسی سیستمی و شبکه',
+      title: 'درباره آرمان حسینی | مهندس نرم‌افزار، Rust و شبکه',
       description:
-        'مسیر آرمان حسینی از اولین خطوط کد تا برنامهنویسی سیستمی با C و Rust و مهندسی شبکه با Xray، VLESS و بهینه‌سازی ترافیک.',
+        'آرمان حسینی مهندس نرم‌افزاری است که نرم‌افزار بومی با Rust، ابزار شبکه و پروژه‌های مهندسی معکوس سخت‌افزار می‌سازد. ببینید روی چه کارهایی و چگونه کار می‌کند.',
     },
     projects: {
       title: 'پروژه‌ها | آرمان حسینی',

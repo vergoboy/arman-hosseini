@@ -7,7 +7,7 @@ export const site = {
   url: 'https://arman-hosseini.ir',
   name: 'Arman Hosseini',
   alternateName: 'آرمان حسینی',
-  aliases: ['Arman Hosseini', 'آرمان حسینی', 'vergoboy', 'the_vergoboy'],
+  aliases: ['Arman Hosseini', 'آرمان حسینی', 'ارمان حسینی', 'vergoboy', 'the_vergoboy'],
   email: 'hi@arman-hosseini.ir',
   emailAlt: 'the.arman.hosseini@gmail.com',
 } as const;
